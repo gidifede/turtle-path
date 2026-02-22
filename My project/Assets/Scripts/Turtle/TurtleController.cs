@@ -94,11 +94,14 @@ namespace TurtlePath.Turtle
         {
             GameObject followerGO = new GameObject($"BabyFollower_{followers.Count}");
             followerGO.transform.position = position;
-            followerGO.transform.localScale = transform.localScale * 0.6f;
+            // Absolute scale 0.72: baby sprite 32x32 PPU 64 (0.5 units) × 0.72 = 0.36 units ≈ 60% of turtle
+            followerGO.transform.localScale = Vector3.one * 0.72f;
 
             SpriteRenderer sr = followerGO.AddComponent<SpriteRenderer>();
             sr.sprite = followerSprite;
-            sr.color = BabyColor;
+            // Custom sprite already contains Baby Pink color → no tint.
+            // Fallback: if using placeholder square, tint is still applied.
+            sr.color = (followerSprite != null && followerSprite.texture.width > 4) ? Color.white : BabyColor;
             sr.sortingOrder = 9;
 
             followers.Add(followerGO);

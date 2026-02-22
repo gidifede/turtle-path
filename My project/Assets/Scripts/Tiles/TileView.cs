@@ -10,14 +10,17 @@ namespace TurtlePath.Tiles
     {
         public event Action<TileView> OnClicked;
 
+        /// <summary>Set to true to show red port indicators (debug). Default: hidden for M2-Bis.</summary>
+        public static bool ShowPortIndicators = false;
+
         private Cell cell;
         private SpriteRenderer spriteRenderer;
+        private SpriteRenderer connectionOverlay;
         private bool isAnimating;
         private float cellSize;
         private float cumulativeRotationZ;
 
-        private static readonly Color DefaultColor = Color.white;
-        private static readonly Color ConnectedColor = new Color(0.59f, 0.81f, 0.71f); // Ocean Teal #96CEB4
+        private static readonly Color ConnectedOverlayColor = new Color(0.59f, 0.81f, 0.71f, 0.5f); // Ocean Teal #96CEB4 alpha 50%
         private static readonly Color PortColor = new Color(0.8f, 0.2f, 0.2f);         // Red for ports
 
         public Cell Cell => cell;
@@ -30,7 +33,7 @@ namespace TurtlePath.Tiles
             // Main tile sprite
             spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
             spriteRenderer.sprite = sprite;
-            spriteRenderer.color = DefaultColor;
+            spriteRenderer.color = Color.white;
             spriteRenderer.sortingOrder = 1;
             transform.localScale = Vector3.one * cellSize * 0.9f;
 
@@ -38,8 +41,19 @@ namespace TurtlePath.Tiles
             BoxCollider2D collider = gameObject.AddComponent<BoxCollider2D>();
             collider.size = Vector2.one;
 
+            // Connection overlay (child SpriteRenderer, toggled on/off)
+            GameObject overlayGO = new GameObject("ConnectionOverlay");
+            overlayGO.transform.SetParent(transform, false);
+            SpriteRenderer overlaySR = overlayGO.AddComponent<SpriteRenderer>();
+            overlaySR.sprite = sprite;
+            overlaySR.color = ConnectedOverlayColor;
+            overlaySR.sortingOrder = 2;
+            connectionOverlay = overlaySR;
+            overlayGO.SetActive(false);
+
             // Create port indicators at base positions (children rotate with parent)
-            CreatePortIndicators(sprite);
+            if (ShowPortIndicators)
+                CreatePortIndicators(sprite);
 
             // Apply initial rotation
             cumulativeRotationZ = -cell.Tile.Rotation;
@@ -122,8 +136,8 @@ namespace TurtlePath.Tiles
 
         public void SetConnected(bool connected)
         {
-            if (spriteRenderer != null)
-                spriteRenderer.color = connected ? ConnectedColor : DefaultColor;
+            if (connectionOverlay != null)
+                connectionOverlay.gameObject.SetActive(connected);
         }
 
         public bool IsAnimating => isAnimating;

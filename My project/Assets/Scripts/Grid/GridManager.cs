@@ -11,7 +11,19 @@ namespace TurtlePath.Grid
     {
         [Header("Settings")]
         public float cellSize = 1.0f;
-        public Sprite cellSprite;
+
+        [Header("Cell Sprites")]
+        public Sprite cellSprite;              // White square for normal cells (tinted Sand Light)
+        public Sprite cellSprite_nest;         // Custom sprite for nest cell (colored in PNG)
+        public Sprite cellSprite_sea;          // Custom sprite for sea cell (colored in PNG)
+
+        [Header("Tile Sprites")]
+        public Sprite tileSprite_straight;     // 64x64 sand path straight (from Pipes col 1)
+        public Sprite tileSprite_curve;        // 64x64 sand path curve (from Pipes col 2)
+
+        [Header("Collectible Sprites")]
+        public Sprite collectibleSprite_shell; // 32x32 Coral Pink shell (custom pixel art)
+        public Sprite collectibleSprite_baby;  // 32x32 Baby Pink turtle (custom pixel art)
 
         private Cell[,] cells;
         private int width, height;
@@ -23,9 +35,7 @@ namespace TurtlePath.Grid
         // Colors
         private static readonly Color NestColor = new Color(0.4f, 0.8f, 0.4f);
         private static readonly Color SeaColor = new Color(0.3f, 0.5f, 0.9f);
-        private static readonly Color ConnectedColor = new Color(0.59f, 0.81f, 0.71f); // Ocean Teal #96CEB4
-        private static readonly Color DefaultColor = Color.white;
-        private static readonly Color EmptyColor = new Color(0.9f, 0.9f, 0.85f);
+        private static readonly Color EmptyColor = new Color(1f, 0.933f, 0.678f); // Sand Light #FFEEAD
 
         public System.Action<TileView> OnTileClicked;
 
@@ -81,9 +91,17 @@ namespace TurtlePath.Grid
 
                     switch (cell.CellType)
                     {
-                        case CellType.Nest: sr.color = NestColor; break;
-                        case CellType.Sea:  sr.color = SeaColor; break;
-                        default:            sr.color = EmptyColor; break;
+                        case CellType.Nest:
+                            sr.sprite = cellSprite_nest ?? cellSprite;
+                            sr.color = cellSprite_nest != null ? Color.white : NestColor;
+                            break;
+                        case CellType.Sea:
+                            sr.sprite = cellSprite_sea ?? cellSprite;
+                            sr.color = cellSprite_sea != null ? Color.white : SeaColor;
+                            break;
+                        default:
+                            sr.color = EmptyColor;
+                            break;
                     }
 
                     spawnedObjects.Add(cellGO);
@@ -102,11 +120,22 @@ namespace TurtlePath.Grid
             tileGO.transform.position = worldPos;
 
             TileView view = tileGO.AddComponent<TileView>();
-            view.Initialize(cell, cellSize, cellSprite);
+            Sprite tileSprite = GetTileSpriteForType(cell.Tile.Type);
+            view.Initialize(cell, cellSize, tileSprite);
             view.OnClicked += HandleTileClicked;
 
             tileViews[cell.GridPosition] = view;
             spawnedObjects.Add(tileGO);
+        }
+
+        private Sprite GetTileSpriteForType(TileType type)
+        {
+            switch (type)
+            {
+                case TileType.Straight: return tileSprite_straight ?? cellSprite;
+                case TileType.Curve:    return tileSprite_curve ?? cellSprite;
+                default:                return cellSprite;
+            }
         }
 
         private void SpawnCollectibles(LevelData levelData)
@@ -122,7 +151,10 @@ namespace TurtlePath.Grid
                 collectGO.transform.position = worldPos;
 
                 CollectibleView view = collectGO.AddComponent<CollectibleView>();
-                view.Initialize(entry.type, entry.position, cellSprite);
+                Sprite sprite = entry.type == CollectibleType.Shell ? collectibleSprite_shell : collectibleSprite_baby;
+                bool useColorTint = sprite == null;
+                if (sprite == null) sprite = cellSprite;
+                view.Initialize(entry.type, entry.position, sprite, useColorTint);
 
                 collectibleViews[entry.position] = view;
                 spawnedObjects.Add(collectGO);

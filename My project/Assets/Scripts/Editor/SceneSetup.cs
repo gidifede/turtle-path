@@ -40,7 +40,7 @@ public class SceneSetup : EditorWindow
         {
             cam.orthographic = true;
             cam.transform.position = new Vector3(0, 0, -10);
-            cam.backgroundColor = SandWarm;
+            cam.backgroundColor = SkyBlue;
             cam.orthographicSize = 5;
         }
 
@@ -52,21 +52,36 @@ public class SceneSetup : EditorWindow
             squareSprite = CreateFallbackSprite();
         }
 
+        // --- Load M2-Bis sprites (null if files don't exist yet) ---
+        Sprite tileSprite_straight = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/tile_straight.png");
+        Sprite tileSprite_curve = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/tile_curve.png");
+        Sprite cellSprite_nest = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/cell_nest.png");
+        Sprite cellSprite_sea = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/cell_sea.png");
+        Sprite collectibleSprite_shell = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/collectible_shell.png");
+        Sprite collectibleSprite_baby = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/collectible_baby.png");
+        Sprite turtleSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/turtle.png");
+
         // --- GridManager ---
         GameObject gridManagerGO = new GameObject("GridManager");
         GridManager gridManager = gridManagerGO.AddComponent<GridManager>();
         gridManager.cellSprite = squareSprite;
+        gridManager.cellSprite_nest = cellSprite_nest;
+        gridManager.cellSprite_sea = cellSprite_sea;
+        gridManager.tileSprite_straight = tileSprite_straight;
+        gridManager.tileSprite_curve = tileSprite_curve;
+        gridManager.collectibleSprite_shell = collectibleSprite_shell;
+        gridManager.collectibleSprite_baby = collectibleSprite_baby;
 
         // --- Turtle ---
         GameObject turtleGO = new GameObject("Turtle");
         TurtleController turtleController = turtleGO.AddComponent<TurtleController>();
         SpriteRenderer turtleSR = turtleGO.AddComponent<SpriteRenderer>();
-        turtleSR.sprite = squareSprite;
-        turtleSR.color = new Color(0.2f, 0.7f, 0.3f);
+        turtleSR.sprite = turtleSprite ?? squareSprite;
+        turtleSR.color = turtleSprite != null ? Color.white : new Color(0.2f, 0.7f, 0.3f);
         turtleSR.sortingOrder = 10;
         turtleGO.transform.localScale = Vector3.one * 0.6f;
         turtleGO.SetActive(false);
-        turtleController.SetFollowerSprite(squareSprite);
+        turtleController.SetFollowerSprite(collectibleSprite_baby ?? squareSprite);
 
         // --- Canvas ---
         GameObject canvasGO = new GameObject("Canvas");
