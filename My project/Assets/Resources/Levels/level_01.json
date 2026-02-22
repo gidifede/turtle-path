@@ -1,0 +1,14 @@
+{
+  "id": 1,
+  "gridSize": { "width": 4, "height": 4 },
+  "nest": { "x": 1, "y": 0 },
+  "sea": { "x": 2, "y": 3 },
+  "tiles": [
+    { "type": "straight", "position": { "x": 1, "y": 1 }, "rotation": 0, "isFixed": false },
+    { "type": "curve",    "position": { "x": 1, "y": 2 }, "rotation": 0, "isFixed": false },
+    { "type": "curve",    "position": { "x": 2, "y": 2 }, "rotation": 180, "isFixed": false }
+  ],
+  "collectibles": [
+    { "type": "shell", "position": { "x": 1, "y": 1 } }
+  ]
+}

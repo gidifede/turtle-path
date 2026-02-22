@@ -1,0 +1,17 @@
+{
+  "id": 2,
+  "gridSize": { "width": 4, "height": 4 },
+  "nest": { "x": 3, "y": 0 },
+  "sea": { "x": 0, "y": 3 },
+  "tiles": [
+    { "type": "curve",    "position": { "x": 3, "y": 1 }, "rotation": 270, "isFixed": false },
+    { "type": "curve",    "position": { "x": 2, "y": 1 }, "rotation": 90, "isFixed": false },
+    { "type": "curve",    "position": { "x": 2, "y": 2 }, "rotation": 270, "isFixed": false },
+    { "type": "straight", "position": { "x": 1, "y": 2 }, "rotation": 90, "isFixed": false },
+    { "type": "curve",    "position": { "x": 0, "y": 2 }, "rotation": 90, "isFixed": false }
+  ],
+  "collectibles": [
+    { "type": "shell", "position": { "x": 2, "y": 1 } },
+    { "type": "shell", "position": { "x": 1, "y": 2 } }
+  ]
+}
