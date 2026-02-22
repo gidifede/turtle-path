@@ -153,6 +153,16 @@ Assets/
 6. Verificare che la tartaruga parta e arrivi al mare
 7. Premere R per ricominciare e verificare che le tessere tornino in posizioni casuali
 
+### Note implementative
+
+**Stato: COMPLETATA**
+
+- DOTween installato come plugin nella cartella `Assets/Plugins/Demigiant/` (non tramite Package Manager)
+- Il codice supporta già tutti e 3 i tipi di tessera (incluso T), sebbene M1 ne richiedesse solo 2 (Dritto e Curva)
+- Il livello di test è stato implementato come file JSON (`level_01.json`), anticipando il formato M2 (non hardcoded)
+- URP configurato con renderer 2D
+- Scena: `SampleScene.unity` (rinominabile in futuro)
+
 ---
 
 ## M2 - Core Loop
@@ -296,6 +306,292 @@ Assets/
 8. Chiudere il gioco, riaprirlo, verificare che stelle e progressione siano salvate
 9. Verificare il contatore tartarughe nel menu
 
+### Note implementative
+
+**Stato: COMPLETATA** (logica e gameplay completi, grafica base rinviata a M2-Bis)
+
+Deviazioni dalla struttura pianificata:
+- **Scena unica** con panel overlay (`SampleScene.unity`), non scene separate come ipotizzato
+- `LevelManager.cs` non creato → funzionalità integrata in `GameManager.cs`
+- `StarDisplay.cs` non creato → funzionalità integrata in `ResultScreenUI.cs`
+- `CreditsUI.cs` aggiunto (non previsto nel piano originale, stub con solo bottone back)
+- **Grafica:** ancora placeholder M1 (quadrati colorati) → rinviata a M2-Bis
+- **Test automatici aggiunti:** 3 assembly definitions, ~33 Edit Mode test, ~10 Play Mode test
+- **Build PC non prodotta** — da generare
+
+**Struttura progetto reale (M2):**
+```
+Assets/
+  Scripts/
+    Core/
+      GameManager.cs          # Stato gioco + progressione livelli (include logica LevelManager)
+      Enums.cs
+      Direction.cs
+    Grid/
+      GridManager.cs
+      Cell.cs
+    Tiles/
+      Tile.cs
+      TileView.cs
+    Path/
+      PathValidator.cs
+    Turtle/
+      TurtleController.cs
+    Level/
+      LevelData.cs
+      LevelLoader.cs
+    Collectibles/
+      Collectible.cs
+      CollectibleView.cs
+    Save/
+      SaveManager.cs
+    UI/
+      UIManager.cs
+      MainMenuUI.cs
+      LevelSelectUI.cs
+      GameplayUI.cs
+      ResultScreenUI.cs       # Include display stelle (nessun StarDisplay.cs separato)
+      CreditsUI.cs
+    Editor/
+      SceneSetup.cs
+    TurtlePath.asmdef
+  Tests/
+    EditMode/
+      TurtlePath.Tests.EditMode.asmdef
+      TileTests.cs, CellTests.cs, DirectionTests.cs, SaveManagerTests.cs, StarCalculationTests.cs
+    PlayMode/
+      TurtlePath.Tests.PlayMode.asmdef
+      LevelLoaderTests.cs, LevelValidationTests.cs, GridManagerTests.cs
+  Resources/
+    Levels/
+      level_01.json ... level_04.json
+  Scenes/
+    SampleScene.unity           # Scena unica con panel overlay
+```
+
+---
+
+## M2-Bis - Visual Base
+
+**Obiettivo:** Sostituire i placeholder (quadrati colorati) con sprite base per tessere, tartaruga e collezionabili. Il gioco deve essere visivamente leggibile prima di aggiungere i contenuti di M3.
+
+**Durata stimata:** 2-3 giorni
+
+**Prerequisito:** M2 completata e tutti i criteri di accettazione soddisfatti.
+
+### Decisioni verificate (sessione 2026-02-22)
+
+Tutti gli asset sono stati scaricati e ispezionati prima di queste decisioni:
+
+| Elemento | Decisione | Sorgente | Note |
+|---|---|---|---|
+| Tessere (Dritto/Curva) | Pipes Tileset (Stealthix) | `Assets/Art/_SourceAssets/Pipes.png` (scaricato, verificato) | 32x32, 15 pezzi × 4 colori. Contiene Dritto (col 0), Curva (col 2-5), T (col 6-9), Croce (col 10). Serve: rimozione sfondo + upscale 2x + palette remap. |
+| Tartaruga | Turtle Sprite (Oiboo) — sprite statico, NO walk cycle | `Assets/Art/_SourceAssets/Turtle_TopDown_64x64_SpriteSheet.png` (scaricato, verificato) | 256x256 RGBA, 16 frame (4x4). Top-down, 64x64, trasparenza OK. Ha idle/retreat/squished/powerup ma **nessun walk cycle**. Walk cycle rimandato a M4. |
+| Direzione tartaruga | Fissa (non ruota verso la direzione di movimento) | N/A | Rimandato a M4-Polish. Per M2-Bis la tartaruga guarda sempre nella stessa direzione. |
+| Conchiglia | Custom pixel art | Da creare | 32x32 px, colore Coral Pink `#FF6F69`, forma spirale semplice |
+| Baby turtle | Custom pixel art | Da creare | 32x32 px, colore Baby Pink `#FFB6C1`, tartarughina semplificata vista dall'alto |
+| Nido | Custom pixel art | Da creare | 64x64 px, colore Sand Warm `#FFCC5C`, cerchio sabbia con dettagli guscio Turtle Shell `#8B6914` |
+| Mare | Custom pixel art | Da creare | 64x64 px, gradiente Sand Light → Ocean Teal `#96CEB4` → Ocean Deep `#1ECDCB`. Statico per M2-Bis (animazione onde in M4). |
+| Glow connesso | Child overlay semitrasparente + bloom URP | N/A | **NON usare SpriteRenderer.color** (è moltiplicativo, produce colori sporchi su sprite Sand). Creare child SpriteRenderer con stesso sprite, colore Ocean Teal `#96CEB4` alpha 0.5, sortingOrder +1. Bloom URP: Intensity 0.2, Threshold 1.5. |
+| Contorno 2px | Rimandato a M4 | N/A | Nessun contorno sugli sprite per M2-Bis. Outline shader implementato in M4. |
+| Cella Normal (sfondo) | Tint Sand Light `#FFEEAD` su quadrato bianco | Quadrato bianco esistente | Le celle normali usano il quadrato bianco con `SpriteRenderer.color = Sand Light`. Nido e mare usano sprite custom. |
+| Port indicators | Nascosti in M2-Bis | N/A | I rettangoli rossi debug sulle porte vengono nascosti. Flag `ShowPortIndicators = false` o `#if TURTLE_DEBUG`. |
+| Camera background | Sky Blue `#87CEEB` | N/A | Colore camera per l'area fuori dalla griglia. Ambiente spiaggia completo in M4. |
+| Caricamento sprite | `Resources.Load<Sprite>()` | `Assets/Resources/Sprites/` | Coerente con il pattern esistente (livelli JSON in Resources/Levels/). SceneSetup carica sprite per tipo. |
+
+**Asset scartati dopo verifica:**
+- **Pixel Turtle (alizard, OpenGameArt):** side-view, incompatibile con la vista top-down del gioco
+- **Baby Turtle (Schwarnhild, itch.io):** l'asset non esiste sulla pagina dell'autore
+- **CraftPix Seabed Objects:** a pagamento, non disponibile gratuitamente
+
+### Cosa implementare
+
+1. **Sprite tessere (Dritto e Curva)**
+   - Sorgente: Pipes Tileset `Pipes.png` — colonna 1 = Dritto verticale (N-S), colonna 2 = Curva (N-E)
+   - Workflow: estrarre tile 32x32 → rimuovere sfondo (rendere trasparente) → upscale 2x Point a 64x64 → palette remap (tubo grigio/azzurro → sentiero Sand Light `#FFEEAD` / Sand Warm `#FFCC5C`)
+   - Tool: GIMP o Aseprite per palette remap, oppure script Python con PIL
+   - Risultato: 2 file PNG 64x64 con trasparenza (`tile_straight.png`, `tile_curve.png`)
+   - Rotazione gestita via codice (Opzione B, già funzionante in TileView.cs)
+   - Nessun contorno per M2-Bis
+
+2. **Sprite tartaruga (statico)**
+   - Sorgente: Turtle Sprite (Oiboo) — riga 0, colonna 0 (frame idle principale)
+   - Workflow: estrarre frame 64x64 → palette remap (marrone → Turtle Green `#4CAF50` / Turtle Shell `#8B6914`)
+   - Risultato: 1 file PNG 64x64 con trasparenza (`turtle.png`)
+   - Nessun walk cycle per M2-Bis (sprite statico che si muove via DOTween come ora)
+   - Nessuna rotazione direzionale per M2-Bis
+   - Walk cycle e direzione rimandati a M4
+
+3. **Icone collezionabili (custom pixel art)**
+   - **Conchiglia:** disegnare spirale semplice 32x32, colore Coral Pink `#FF6F69` con dettagli Deep Brown `#5D4037`. Vista dall'alto, stile flat coerente con Kenney.
+   - **Baby turtle:** disegnare tartarughina semplificata 32x32, colore Baby Pink `#FFB6C1` con guscio leggermente più scuro. Vista top-down coerente con la tartaruga principale.
+   - Tool: Aseprite, GIMP, o qualsiasi editor pixel art
+   - Risultato: 2 file PNG 32x32 con trasparenza (`collectible_shell.png`, `collectible_baby.png`)
+
+4. **Glow percorso connesso (overlay + bloom)**
+   - **NON usare `SpriteRenderer.color`** per il tint (è moltiplicativo: Sand × Ocean Teal = oliva sporco)
+   - Approccio: child SpriteRenderer overlay con stesso sprite della tessera
+     - `overlay.color = new Color(0.59f, 0.81f, 0.71f, 0.5f)` (Ocean Teal alpha 50%)
+     - `overlay.sortingOrder = baseSpriteRenderer.sortingOrder + 1`
+   - Bloom URP nella scena:
+     - Bloom: Intensity 0.2, Threshold 1.5 (solo elementi molto luminosi)
+     - Nessun altro post-processing per M2-Bis (Color Grading e Vignette in M4)
+   - Modifica in `TileView.cs`: creare/attivare overlay child in `SetConnected(true)`, nascondere in `SetConnected(false)`
+
+5. **Celle normali, nido e mare**
+   - **Celle normali:** usare il quadrato bianco esistente con `SpriteRenderer.color = Sand Light #FFEEAD`. Nessun sprite aggiuntivo.
+   - **Nido (custom pixel art):** disegnare 64x64, cerchio/buca nella sabbia Sand Warm `#FFCC5C` con 2-3 frammenti di guscio Turtle Shell `#8B6914`. Stile semplice flat.
+   - **Mare (custom pixel art):** disegnare 64x64, metà superiore Sand Light `#FFEEAD`, metà inferiore gradiente verso Ocean Teal `#96CEB4` / Ocean Deep `#1ECDCB`. Statico (nessuna animazione onde per M2-Bis).
+   - Risultato: 2 file PNG 64x64 con trasparenza (`cell_nest.png`, `cell_sea.png`)
+   - In `GridManager.cs`: celle Nest e Sea usano sprite custom (`Resources.Load`), celle Normal usano quadrato bianco + tint Sand Light
+
+6. **Port indicators — nascondere**
+   - I rettangoli rossi debug sulle porte delle tessere vanno nascosti
+   - In `TileView.cs`: aggiungere `public static bool ShowPortIndicators = false;`
+   - Se `ShowPortIndicators == false`, non creare i child GameObject dei port indicators
+   - Riattivabili per debug impostando il flag a `true`
+
+7. **Camera background**
+   - Impostare il colore camera a Sky Blue `#87CEEB`
+   - L'ambiente spiaggia completo (palme, decorazioni, sfondo) è rimandato a M4
+
+### Decisioni prese prima dell'implementazione
+
+Tutte le ambiguità identificate durante il controllo di coerenza sono state risolte.
+
+**DA-1. ✅ Colonne Pipes Tileset (verificato tramite ispezione immagine)**
+- **Dritto = colonna 1** (verticale N-S). La colonna 0 è orizzontale W-E (la doc precedente era errata).
+- **Curva = colonna 2** (N-E). Corrisponde al codice `Tile.cs:15` che definisce Curva rot 0° = {N, E}. Nessun flip necessario.
+- Colonne 3-5 sono le altre rotazioni della curva (E-S, S-W, W-N), non servono (rotazione via codice).
+
+**DA-2. ✅ Sprite colorati + tint bianco (WYSIWYG)**
+- Gli sprite custom dei collectibles vengono creati già nei colori finali (Coral Pink, Baby Pink).
+- Il codice `CollectibleView.cs` va modificato: `sr.color = Color.white` (rimuovere il tint moltiplicativo).
+- Stessa logica per tutti gli sprite custom: il PNG contiene il colore finale, il codice non tinta.
+
+**DA-3. ✅ Celle Nido/Mare: Color.white (conseguenza di DA-2)**
+- `GridManager.cs`: per celle Nest e Sea con sprite custom, usare `sr.color = Color.white`.
+- Per celle Normal: mantenere `sr.color = Sand Light #FFEEAD` su quadrato bianco (il tint qui funziona perché il quadrato è bianco).
+
+**DA-4. ✅ Baby follower: scala assoluta 0.72**
+- Tartaruga: 64x64 PPU 64 = 1.0 unità × scale 0.6 = **0.6 unità visive (~38px)**
+- Baby: 32x32 PPU 64 = 0.5 unità × scale **0.72** = **0.36 unità visive (~23px)**
+- Rapporto: 23/38 = 60% della tartaruga ✓
+- Codice `TurtleController.cs`: cambiare a `followerGO.transform.localScale = Vector3.one * 0.72f` (scala assoluta, non relativa al parent).
+
+**DA-5. ✅ Bobbing collectibles → rimandato a M4**
+- In M2-Bis i collectibles sono statici (nessuna animazione idle).
+- Bobbing verticale e rotazione da implementare in M4-Polish con DOTween loop.
+
+**DA-6. ✅ Particelle raccolta → rimandato a M4**
+- In M2-Bis la raccolta usa solo scale-down DOTween (già implementato).
+- Particelle Coral Pink, cuoricini Baby Pink da implementare in M4-Polish.
+
+**DA-7. ✅ SceneSetup + serializzazione scena**
+- SceneSetup.cs (Editor-only) assegna sprite ai campi pubblici dei component tramite `AssetDatabase.LoadAssetAtPath`.
+- I riferimenti vengono serializzati nella scena → funzionano a runtime senza `Resources.Load`.
+- Sprite vanno in `Assets/Art/` (NON in Resources/).
+- Campi da aggiungere a `GridManager.cs`: `tileSprite_straight`, `tileSprite_curve`, `cellSprite_nest`, `cellSprite_sea`, `collectibleSprite_shell`, `collectibleSprite_baby`.
+- Campo da aggiungere a `TurtleController.cs` (o SceneSetup assegna direttamente al SpriteRenderer): `turtleSprite`.
+
+### Note tecniche di implementazione
+
+**Strategia sostituzione sprite**
+- TileView.cs già usa SpriteRenderer → cambiare il riferimento da sprite quad a sprite tessera
+- Opzione B confermata: 2 sprite base (dritto + curva), ruotati via `transform.rotation` (già funzionante)
+- GridManager.cs: assegnare sprite diversi per cellType (Nest → cell_nest, Sea → cell_sea, Normal → quadrato bianco + tint Sand Light)
+- TurtleController.cs: aggiungere/assegnare SpriteRenderer con turtle.png
+- CollectibleView.cs: sprite diverso per tipo (shell → collectible_shell, baby → collectible_baby)
+
+**Caricamento sprite (SceneSetup + serializzazione scena)**
+- Tutti gli sprite finali vanno in `Assets/Art/` (sottocartelle per tipo) — NON in Resources/
+- `SceneSetup.cs` (Editor-only) assegna sprite ai campi pubblici con `AssetDatabase.LoadAssetAtPath<Sprite>()`
+- I riferimenti vengono serializzati nella scena Unity → funzionano a runtime senza caricamento esplicito
+- Il singolo `squareSprite` attuale viene sostituito da campi type-specific su GridManager e TurtleController
+- Campi nuovi su `GridManager.cs`: `tileSprite_straight`, `tileSprite_curve`, `cellSprite_nest`, `cellSprite_sea`, `collectibleSprite_shell`, `collectibleSprite_baby`
+- Campo `turtleSprite` su TurtleController (o assegnamento diretto al SpriteRenderer in SceneSetup)
+
+**Overlay connessione (TileView.cs)**
+- Ogni TileView crea un child GameObject "ConnectionOverlay" con SpriteRenderer
+- Lo sprite è lo stesso della tessera, colore Ocean Teal alpha 50%: `new Color(0.59f, 0.81f, 0.71f, 0.5f)`
+- sortingOrder = base sortingOrder + 1
+- L'overlay è nascosto di default (`SetActive(false)`)
+- `SetConnected(true)` → attiva overlay, `SetConnected(false)` → disattiva
+- Il bloom URP fa brillare naturalmente l'overlay semitrasparente
+
+**Palette remapping workflow**
+1. Aprire lo sprite sorgente in GIMP/Aseprite
+2. Selezionare i pixel del colore originale (es. grigio tubo)
+3. Sostituire con il colore palette target (es. Sand Warm)
+4. Ripetere per ogni colore (tipicamente 3-5 colori per sprite)
+5. Esportare come PNG con trasparenza
+- In alternativa: script Python con PIL per automatizzare il remap su tutti gli sprite
+
+**Import settings Unity (per TUTTI gli sprite)**
+- Filter Mode: Point (no filter)
+- Compression: None
+- Pixels Per Unit: 64
+- Sprite Mode: Single
+- Max Size: 256 (o Default)
+
+**Setup bloom URP**
+1. Creare un GameObject "Post Processing Volume" nella scena
+2. Aggiungere componente Volume (Global)
+3. Creare un Volume Profile
+4. Aggiungere override Bloom: Intensity 0.2, Threshold 1.5
+5. Verificare che la camera abbia Post Processing abilitato nel URP Renderer
+
+**Struttura file sprite**
+```
+Assets/
+  Art/
+    _SourceAssets/              # Asset sorgente scaricati (NON usati direttamente in gioco)
+      Pipes.png                 # Pipes Tileset originale 32x32 (Stealthix, CC0)
+      Turtle_TopDown_64x64_SpriteSheet.png  # Turtle sprite originale (Oiboo, CC0)
+    Tiles/
+      tile_straight.png         # 64x64, sentiero dritto, palette Sand (da Pipes col 1)
+      tile_curve.png            # 64x64, sentiero curva, palette Sand (da Pipes col 2)
+    Characters/
+      turtle.png                # 64x64, tartaruga top-down, palette Turtle Green (da Oiboo frame 0,0)
+    Collectibles/
+      collectible_shell.png     # 32x32, conchiglia, Coral Pink — colore finale nel PNG
+      collectible_baby.png      # 32x32, baby turtle, Baby Pink — colore finale nel PNG
+    Cells/
+      cell_nest.png             # 64x64, nido/buca sabbia — colore finale nel PNG
+      cell_sea.png              # 64x64, transizione sabbia-mare — colore finale nel PNG
+```
+**Nota:** gli sprite sono in `Assets/Art/` (NON in `Resources/`). Vengono referenziati tramite SceneSetup in Editor e serializzati nella scena.
+
+### Criteri di accettazione
+
+- [ ] Le tessere usano sprite sentiero di sabbia (non più quadrati bianchi con linee)
+- [ ] La tartaruga ha uno sprite riconoscibile top-down (non più quadrato verde)
+- [ ] I collezionabili hanno icone distinguibili (conchiglia rosa, baby turtle rosa chiaro)
+- [ ] Il nido e il mare hanno sprite dedicati (non più quadrati colorati)
+- [ ] Il percorso connesso si distingue visivamente (tint Ocean Teal su sprite reali + bloom leggero)
+- [ ] Tutti gli sprite usano la palette master (nessun colore fuori palette)
+- [ ] Tutti gli sprite sono importati con Point filter e PPU 64
+- [ ] I 4 livelli esistenti sono giocabili con la nuova grafica senza regressioni
+- [ ] I test automatici (Edit Mode + Play Mode) passano tutti
+- [ ] Il gioco gira a 60 fps su PC
+
+### Criteri NON inclusi in M2-Bis (rimandati a M4)
+- Walk cycle tartaruga (sprite statico per ora)
+- Rotazione tartaruga verso la direzione di movimento
+- Contorno 2px Deep Brown (outline shader)
+- Animazione onde mare
+- Post-processing completo (Color Grading, Vignette)
+- Bobbing idle collectibles (conchiglie e baby fermi per ora)
+- Particelle raccolta (solo scale-down DOTween, nessuna particella)
+
+### Come testare
+1. Avviare il progetto in Unity Editor
+2. Giocare i 4 livelli verificando che gli sprite siano visibili e coerenti
+3. Verificare che la rotazione tessere funzioni con gli sprite (non si deformano)
+4. Verificare raccolta collezionabili (icone scompaiono correttamente)
+5. Verificare bloom leggero visibile sulle tessere connesse
+6. Eseguire i test automatici (Edit Mode + Play Mode) → tutti verdi
+
 ---
 
 ## M3 - Content
@@ -304,7 +600,7 @@ Assets/
 
 **Durata stimata:** 5-7 giorni
 
-**Prerequisito:** M2 completata e tutti i criteri di accettazione soddisfatti.
+**Prerequisito:** M2-Bis completata e tutti i criteri di accettazione soddisfatti.
 
 ### Cosa implementare
 
@@ -384,8 +680,12 @@ Assets/
   2. Esiste una soluzione "3 stelle" (path che raccoglie tutto)
   3. La soluzione non è banale (richiede almeno 3-4 rotazioni)
 
+### Note tecniche aggiuntive
+
+- `LevelLoader.cs` deve essere esteso per parsare `obstacles` e `inventory` dal JSON (attualmente supporta solo tessere e collezionabili)
+
 ### Grafica
-- Stessi asset di M2 per tessere e tartaruga
+- Stessi asset di M2-Bis per tessere e tartaruga
 - Sprite placeholder per roccia (quadrato grigio scuro) e buco (quadrato nero con bordo tratteggiato)
 - Pannello inventario con sfondo chiaro e tessere trascinabili
 - Riferimento art: [art-direction.md - Sezione 5, M3](art-direction.md#5-mapping-asset--milestones)
@@ -686,12 +986,13 @@ Assets/
 
 | Milestone | Durata stimata | Cumulativo |
 |---|---|---|
-| M1 - Prototype | 3-5 giorni | 3-5 giorni |
-| M2 - Core Loop | 5-7 giorni | 8-12 giorni |
-| M3 - Content | 5-7 giorni | 13-19 giorni |
-| M4 - Polish | 7-10 giorni | 20-29 giorni |
-| M5 - Release | 5-7 giorni | 25-36 giorni |
+| M1 - Prototype | ~~3-5 giorni~~ COMPLETATA | - |
+| M2 - Core Loop | ~~5-7 giorni~~ COMPLETATA | - |
+| **M2-Bis - Visual Base** | **2-3 giorni** | **2-3 giorni** |
+| M3 - Content | 5-7 giorni | 7-10 giorni |
+| M4 - Polish | 7-10 giorni | 14-20 giorni |
+| M5 - Release | 5-7 giorni | 19-27 giorni |
 
-**Stima totale: 5-7 settimane** per MVP completo.
+**Stima rimanente: ~4-5 settimane** per completare MVP (da M2-Bis a M5).
 
-Le stime non includono il tempo per il lavoro grafico (reskin asset, palette remapping). Vedi [art-direction.md - Sezione 5](art-direction.md#5-mapping-asset--milestones) per la stima separata (~28 ore).
+Le stime non includono il tempo per il lavoro grafico (reskin asset, palette remapping, custom pixel art). Vedi [art-direction.md - Sezione 5](art-direction.md#5-mapping-asset--milestones) per la stima separata (~31.5 ore).

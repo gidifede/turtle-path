@@ -31,24 +31,23 @@ Gli asset provengono da 3 fonti con stili diversi. Devono convergere verso **un 
 | Fonte | Stile nativo | Adattamento necessario |
 |---|---|---|
 | Kenney (UI, Puzzle, Tower Defense) | Flat vector, pulito | Nessuno - è lo stile target. Ricolorare alla palette. |
-| OpenGameArt (turtle, beach, water) | Pixel art 16/32-bit | Upscale a 64x64 con filtering **Point (no filter)** per mantenere pixel-crisp. Poi palette remapping. L'outline shader 2px uniforma il look. |
-| Schwarnhild (baby turtle) | Hand-drawn | Ridisegnare in stile flat OPPURE usare solo come reference per creare una versione flat coerente. Non usare l'asset raw. |
-| CraftPix (seabed objects) | Pixel art | Come OpenGameArt: upscale Point + palette remapping + outline shader. |
+| OpenGameArt (Turtle Sprite Oiboo) | Pixel art 64x64 | Palette remapping. L'outline shader 2px (M4) uniforma il look. |
+| Stealthix (Pipes Tileset) | Pixel art 32x32 | Upscale 2x con filtering **Point (no filter)** a 64x64. Palette remapping. |
+| Custom pixel art (collezionabili, nido, mare) | Pixel art | Creare direttamente in stile flat coerente con Kenney, usando la palette master. |
 
 **Regola:** Se un asset dopo il reskin non sembra coerente con i Kenney, va ridisegnato in stile flat. Il look Kenney è l'ancora di coerenza.
 
 ### Risoluzione e scaling
 Tutti gli asset finali devono essere **64x64 px** (o multipli per elementi più grandi).
 
-| Asset nativo | Risoluzione | Azione |
-|---|---|---|
-| Pipes Tileset (Stealthix) | 32x32 | Upscale 2x con Point filter → 64x64 |
-| Animated Water Tiles | 32x32 | Upscale 2x con Point filter → 64x64 |
-| Turtle Sprite | 64x64 | Nessun resize |
-| Pixel Turtle | 66x66 | Crop/resize a 64x64 |
-| ZRPG Beach | Variabile | Resize a 64x64 per tile |
-| Schwarnhild baby turtle | Variabile | Resize a 32x32 (meta della tessera, sovrapposta) |
-| CraftPix seabed | Variabile | Resize a 64x64 per decorazioni |
+| Asset nativo | Risoluzione | Azione | Milestone |
+|---|---|---|---|
+| Pipes Tileset (Stealthix) | 32x32 | Upscale 2x con Point filter → 64x64 | M2-Bis |
+| Turtle Sprite (Oiboo) | 64x64 | Nessun resize, solo palette remap | M2-Bis |
+| Custom collectibles | 32x32 | Creare direttamente a 32x32 | M2-Bis |
+| Custom cells (nido, mare) | 64x64 | Creare direttamente a 64x64 | M2-Bis |
+| Animated Water Tiles | 32x32 | Upscale 2x con Point filter → 64x64 | M4 |
+| ZRPG Beach | Variabile | Resize a 64x64 per tile | M4 |
 
 **Import settings Unity per TUTTI gli sprite:**
 - Filter Mode: **Point (no filter)**
@@ -110,7 +109,7 @@ Tutti gli asset devono essere rimappati a questa palette. Nessun colore fuori pa
 - Colore: gradiente Sand Light `#FFEEAD` → Ocean Teal `#96CEB4` → Ocean Deep `#1ECDCB`
 - Posizione: sempre ultima riga (basso)
 - Non ruotabile: nessun feedback al tap
-- Animazione idle: piccole onde in loop (2-3 frame)
+- Animazione idle: piccole onde in loop (da implementare in M4, non in M2-Bis. Se si usa Animated Water Tiles: 4 frame. Se custom: 2-3 frame sufficienti.)
 - Dimensione: 64x64 px
 
 ### Stati visivi delle tessere
@@ -119,8 +118,8 @@ Ogni tessera ha 4 possibili stati visivi. Tutti devono essere chiaramente distin
 
 | Stato | Aspetto | Colori |
 |---|---|---|
-| **Default** (non connessa) | Tessera con percorso visibile, colore neutro, contorno 2px | Percorso: Sand Warm `#FFCC5C`, sfondo: Sand Light `#FFEEAD`, contorno: Deep Brown `#5D4037` |
-| **Connessa** (path valido dal nido) | Tessera illuminata, percorso cambia colore | Percorso: Ocean Teal `#96CEB4`, sfondo: Sand Light `#FFEEAD`, contorno: Deep Brown `#5D4037`, glow leggero (bloom) |
+| **Default** (non connessa) | Tessera con percorso visibile, colore neutro | Percorso: Sand Warm `#FFCC5C`, sfondo: Sand Light `#FFEEAD`. Contorno Deep Brown `#5D4037` 2px **solo da M4** (outline shader). In M2-Bis: nessun contorno. |
+| **Connessa** (path valido dal nido) | Tessera illuminata, overlay colorato | Percorso base invariato + child SpriteRenderer overlay Ocean Teal `#96CEB4` alpha 50%. Contorno: Deep Brown `#5D4037` (M4). **NON usare SpriteRenderer.color** (moltiplicativo, produce colori sporchi). Bloom URP (Intensity 0.2, Threshold 1.5) amplifica il glow dell'overlay. |
 | **Fissa** (non ruotabile) | Come default ma con icona lucchetto piccola (8x8 px) nell'angolo in basso a destra | Lucchetto: UI Dark `#2C3E50` con opacita 50% |
 | **In drag** (dall'inventario) | Tessera leggermente ingrandita (1.1x), ombra più pronunciata, opacità 80% | Stessi colori di Default con ombra Deep Brown al 30% |
 
@@ -135,7 +134,7 @@ Gli oggetti collezionabili sono **sovrapposti al centro della tessera**, dimensi
 
 Quando la tartaruga principale passa sulla tessera:
 - Conchiglia: animazione scale-down + particelle Coral Pink, poi scompare
-- Baby Turtle: animazione di "aggancio" (salta verso la tartaruga), poi segue in coda con walk cycle proprio (stessi frame della principale ma scala 0.6x e tinta Baby Pink `#FFB6C1`)
+- Baby Turtle: animazione di "aggancio" (salta verso la tartaruga), poi segue in coda. Lo sprite in convoglio è lo sprite custom `collectible_baby.png` scalato a 0.6x della tartaruga principale (0.6 × 64 = ~38px), tinta Baby Pink `#FFB6C1`. Per M2-Bis: nessun walk cycle proprio (sprite statico come la principale). Walk cycle baby in M4.
 
 ### Pannello Inventario (livelli 11-15)
 
@@ -161,12 +160,23 @@ Tutti gli asset sono gratuiti e con licenze che permettono uso commerciale.
 | Tower Defense Top-Down (Kenney) | [kenney.nl](https://kenney.nl/assets/tower-defense-top-down) | CC0 | 300 asset: path tiles top-down + terreno + decorazioni. Stile flat già coerente con la direzione artistica. |
 | Puzzle Pack 2 (Kenney) | [kenney.nl](https://www.kenney.nl/assets/puzzle-pack-2) | CC0 | 795 asset supplementari: forme, connettori, elementi puzzle. Sorgenti vettoriali inclusi. |
 
-**Lavorazione tessere:**
-1. Partire dal Pipes Tileset di Stealthix (geometria corretta per Dritto/Curva/T)
-2. Reskinare da "tubo metallico" a "sentiero di sabbia compatta" usando la palette Sand Light / Sand Warm
-3. Aggiungere contorno 2px Deep Brown
-4. Scalare a 64x64 px
-5. Creare 4 rotazioni per tipo (0, 90, 180, 270 gradi) come sprite separate O ruotare via codice
+**Lavorazione tessere (verificato 2026-02-22):**
+
+Il file `Pipes.png` è 480x128 px, contiene 15 pezzi × 4 varianti colore (righe). Pezzi utili (verificato tramite ispezione immagine):
+- Colonna 0: Dritto orizzontale (W-E) — non usare per rot 0°
+- **Colonna 1: Dritto verticale (N-S)** — corrisponde a `Tile.cs` Straight rot 0° = {N, S}
+- **Colonna 2: Curva (N-E)** — corrisponde a `Tile.cs` Curve rot 0° = {N, E}
+- Colonne 3-5: Curva nelle altre rotazioni (E-S, S-W, W-N) — non servono (rotazione via codice)
+- Colonne 6-9: T-piece (per M3)
+- Colonna 10: Croce (non serve per MVP)
+
+Workflow:
+1. Estrarre tile 32x32 dal Pipes Tileset (usare riga 3 = azzurro, più vicina al target)
+2. Rimuovere sfondo (rendere trasparente i pixel di sfondo)
+3. Reskinare da "tubo" a "sentiero di sabbia compatta": palette remap a Sand Light `#FFEEAD` / Sand Warm `#FFCC5C`
+4. Upscale 2x con Point filter → 64x64 px
+5. Contorno 2px Deep Brown: **rimandato a M4** (outline shader). Per M2-Bis sprite senza contorno.
+6. Rotazioni gestite via codice (`transform.rotation` in TileView.cs) — 1 sprite per tipo, non 4
 
 ### 3.2 Ambiente Spiaggia
 
@@ -175,24 +185,25 @@ Tutti gli asset sono gratuiti e con licenze che permettono uso commerciale.
 | ZRPG Beach | [OpenGameArt](https://opengameart.org/content/zrpg-beach) | CC-BY-SA 3.0 | Sabbia, conchiglie, 12 varianti banano, 16 palme con ombre. Sfondo e decorazioni attorno alla griglia. |
 | Top Down Grass, Beach and Water | [OpenGameArt](https://opengameart.org/content/top-down-grass-beach-and-water-tileset) | Verificare | Transizioni acqua → sabbia → erba. Bordi della griglia e zona mare. |
 | Animated Water Tiles | [OpenGameArt](https://opengameart.org/content/animated-water-tiles-0) | Verificare | Acqua animata 32x32, 4 frame. Per la zona mare in basso. |
-| Free Top-Down Seabed Objects | [CraftPix](https://craftpix.net/freebies/free-top-down-seabed-objects-pixel-art/) | Royalty-free | Coralli, alghe animate, pietre. Decorazione bordi e zona mare. |
+| ~~Free Top-Down Seabed Objects~~ | [CraftPix](https://craftpix.net/freebies/free-top-down-seabed-objects-pixel-art/) | Royalty-free | ~~Coralli, alghe animate, pietre.~~ **NON DISPONIBILE:** richiede pagamento/abbonamento nonostante la pagina dica "free". Usare alternative custom o altri pack gratuiti. |
 
 **Nota licenza CC-BY-SA 3.0 (ZRPG Beach):** Richiede attribuzione e share-alike. Inserire crediti nel gioco (schermata Credits). Le modifiche derivate devono mantenere la stessa licenza.
 
 ### 3.3 Tartaruga
 
-| Asset | Fonte | Licenza | Uso in Turtle Path |
-|---|---|---|---|
-| Turtle Sprite (64x64) | [OpenGameArt](https://opengameart.org/content/turtle-sprite) | CC0 | Tartaruga principale. Animazioni: Idle, Walk, Retreat, Power up. |
-| Pixel Turtle (66x66) | [OpenGameArt](https://opengameart.org/content/pixel-turtle) | CC0 | Walk cycle alternativo (6 frame). Retract cycle (5 frame). |
-| Baby Turtle & Fish (Schwarnhild) | [itch.io](https://schwarnhild.itch.io/) | Royalty-free | Baby turtle per i collezionabili. Stile hand-drawn. **Nota:** il link punta al profilo dell'autore; cercare l'asset specifico "Baby Turtle" o "Sea Creatures" nella pagina. Verificare il link esatto prima del download. |
-| Octopus, Jellyfish, Shark, Turtle | [CraftPix](https://craftpix.net/freebies/octopus-jellyfish-shark-and-turtle-free-sprite-pixel-art/) | Royalty-free | Tartaruga alternativa + creature marine per decorazioni future. |
+| Asset | Fonte | Licenza | Uso in Turtle Path | Stato |
+|---|---|---|---|---|
+| **Turtle Sprite (64x64)** | [OpenGameArt - Oiboo](https://opengameart.org/content/turtle-sprite) | CC0 | **SCELTA come tartaruga principale.** Spritesheet 256x256, 16 frame (4x4), top-down, RGBA con trasparenza. Ha: idle, shell retreat, squished, power-up. **Non ha walk cycle.** | Scaricato e verificato |
+| ~~Pixel Turtle (66x66)~~ | [OpenGameArt - alizard](https://opengameart.org/content/pixel-turtle) | CC0 | ~~Walk cycle 6 frame.~~ **SCARTATO:** è side-view, incompatibile con la vista top-down del gioco. | Scaricato e verificato — non usabile |
+| ~~Baby Turtle (Schwarnhild)~~ | [itch.io](https://schwarnhild.itch.io/) | Royalty-free | **SCARTATO:** il link punta al profilo dell'autore ma l'asset "Baby Turtle" non esiste nella pagina. Nessun asset baby turtle trovato. | Verificato — non esiste |
+| Octopus, Jellyfish, Shark, Turtle | [CraftPix](https://craftpix.net/freebies/octopus-jellyfish-shark-and-turtle-free-sprite-pixel-art/) | Royalty-free | Tartaruga alternativa + creature marine per decorazioni future. Non verificato. | Da verificare |
 
-**Scelta tartaruga principale:**
-- Scaricare sia Turtle Sprite (64x64) che Pixel Turtle (66x66)
-- Valutare quale si adatta meglio alla palette dopo il reskin
-- Scegliere UNA sola come tartaruga principale per coerenza
-- L'altra puo servire come reference o per le baby turtles
+**Decisione tartaruga (presa 2026-02-22):**
+- **Principale:** Turtle Sprite (Oiboo), frame idle (riga 0, colonna 0), top-down 64x64
+- **Walk cycle:** non presente nell'asset. Rimandato a M4 (creare 4-6 frame custom o cercare altro asset)
+- **Direzione movimento:** rimandato a M4. Per M2-Bis lo sprite è fisso (non ruota verso la direzione)
+- **Baby turtle collezionabile:** custom pixel art 32x32 (nessun asset esterno disponibile)
+- **Baby turtle in convoglio:** usa lo sprite custom della baby, scala 0.6x della tartaruga principale (0.6 × 64 = ~38px), tinta Baby Pink
 
 ### 3.4 UI
 
@@ -309,13 +320,14 @@ Tutti gli effetti usano il Particle System di Unity con sprite semplici (cerchio
 
 | Milestone | Asset da preparare | Lavoro grafico |
 |---|---|---|
-| **M1 - Prototype** | Nessun asset esterno. Quadrati colorati generati in Unity (bianco = tessera, grigio = ostacolo, verde = tartaruga, blu = mare). | Zero lavoro artistico. Pura validazione meccanica. |
-| **M2 - Core Loop** | Pipes Tileset reskinato (2 tipi × 4 rotazioni = 8 sprite: Dritto e Curva). Turtle Sprite con walk cycle. Sprite connessione luminosa. | Reskin tessere alla palette (~3h). Reskin tartaruga (~2h). Creare sprite glow percorso (~1h). |
-| **M3 - Content** | Sprite tessera T (1 tipo × 4 rotazioni = 4 sprite). Sprite conchiglia. Sprite baby turtle. Sprite roccia. Sprite buco. | Reskin tessera T alla palette (~1h). Adattare da CraftPix/Schwarnhild (~3h). |
-| **M4 - Polish** | Sfondo spiaggia completo (ZRPG Beach reskinato). Acqua animata. Palme e decorazioni. UI Kenney ricolorata. Effetti particellari (splash, stelle). Post-processing setup. | Reskin ambiente (~6h). UI customization (~3h). Particelle in Unity (~4h). Post-processing (~1h). |
+| **M1 - Prototype** | Nessun asset esterno. COMPLETATA. | Zero. |
+| **M2 - Core Loop** | Nessun asset esterno (logica only). COMPLETATA. | Zero (grafica rinviata a M2-Bis). |
+| **M2-Bis - Visual Base** | Pipes Tileset reskinato (2 tipi: Dritto e Curva). Turtle Sprite statico (Oiboo, no walk cycle). Icone collezionabili custom (conchiglia + baby turtle). Sprite nido e mare custom. Setup bloom URP. | Reskin tessere (~2h). Reskin tartaruga (~1h). Custom pixel art collectibles + nido + mare (~2h). Setup bloom (~0.5h). Totale: **~5.5h**. |
+| **M3 - Content** | Sprite tessera T (1 tipo, da Pipes Tileset col 6-9). Sprite roccia. Sprite buco. | Reskin tessera T (~1h). Custom pixel art roccia + buco (~2h). Totale: ~3h. |
+| **M4 - Polish** | Walk cycle tartaruga (custom o nuovo asset). Direzione tartaruga. Outline shader 2px. Sfondo spiaggia (ZRPG Beach reskinato). Acqua animata. UI Kenney ricolorata. Effetti particellari. Post-processing completo. | Walk cycle + direzione (~3h). Outline shader (~2h). Reskin ambiente (~6h). UI customization (~3h). Particelle (~4h). Post-processing (~1h). **~19h**. |
 | **M5 - Release** | Splash screen. Icona app. Screenshot per store. | Design finale (~4h). |
 
-**Stima lavoro grafico totale MVP: ~29 ore**
+**Stima lavoro grafico totale MVP: ~31.5 ore** (M2-Bis: ~5.5h, M3: ~3h, M4: ~19h, M5: ~4h)
 
 ---
 
@@ -358,16 +370,17 @@ Assets/
 
 ## 7. Licenze e Crediti
 
-| Asset | Licenza | Obbligo |
-|---|---|---|
-| Kenney (UI, Puzzle, Tower Defense, Icons, Mobile Controls) | CC0 | Nessuno (ma credito apprezzato) |
-| Turtle Sprite, Pixel Turtle (OpenGameArt) | CC0 | Nessuno |
-| Pipes Tileset (Stealthix) | CC0 | Nessuno |
-| ZRPG Beach (OpenGameArt) | CC-BY-SA 3.0 | Attribuzione obbligatoria + share-alike |
-| Top-Down Seabed Objects (CraftPix) | CraftPix Free License | Uso commerciale permesso, no redistribuzione raw |
-| Baby Turtle (Schwarnhild) | Royalty-free | Verificare termini specifici |
-| Animated Water Tiles (OpenGameArt) | Verificare | Verificare prima dell'uso |
-| Top Down Grass Beach Water (OpenGameArt) | Verificare | Verificare prima dell'uso |
+| Asset | Licenza | Obbligo | Stato |
+|---|---|---|---|
+| Kenney (UI, Puzzle, Tower Defense, Icons, Mobile Controls) | CC0 | Nessuno (ma credito apprezzato) | Da usare (M2-Bis per UI futura, M4 per ambiente) |
+| Turtle Sprite - Oiboo (OpenGameArt) | CC0 | Nessuno | **In uso M2-Bis** |
+| Pipes Tileset - Stealthix (itch.io) | CC0 | Nessuno | **In uso M2-Bis** |
+| ZRPG Beach (OpenGameArt) | CC-BY-SA 3.0 | Attribuzione obbligatoria + share-alike | Da usare in M4 |
+| Animated Water Tiles (OpenGameArt) | Verificare | Verificare prima dell'uso | Da usare in M4 |
+| Top Down Grass Beach Water (OpenGameArt) | Verificare | Verificare prima dell'uso | Da usare in M4 |
+| ~~Pixel Turtle - alizard (OpenGameArt)~~ | CC0 | - | **SCARTATO** (side-view) |
+| ~~Baby Turtle - Schwarnhild (itch.io)~~ | - | - | **SCARTATO** (asset inesistente) |
+| ~~Top-Down Seabed Objects (CraftPix)~~ | - | - | **SCARTATO** (a pagamento) |
 
 **Azione richiesta prima di M4:** Verificare le licenze degli asset marcati "Verificare" e inserire i crediti obbligatori nella schermata Credits del gioco.
 
@@ -377,9 +390,39 @@ Assets/
 
 Prima di iniziare ogni milestone, verificare:
 
-- [ ] Tutti gli asset necessari sono stati scaricati
+- [ ] Tutti gli asset necessari sono stati scaricati o creati
 - [ ] Tutti gli asset sono stati rimappati alla palette master
-- [ ] Tutti gli asset sono alla dimensione corretta (64x64 o multipli)
-- [ ] Il contorno 2px e stato applicato (o lo shader e configurato)
-- [ ] Gli sprite sono stati aggiunti al Sprite Atlas corretto
+- [ ] Tutti gli asset sono alla dimensione corretta (64x64 o 32x32 per collectibles)
+- [ ] Il contorno 2px e stato applicato (o lo shader e configurato) — **N/A per M2-Bis** (rimandato a M4)
+- [ ] Gli sprite sono stati aggiunti al Sprite Atlas corretto — **N/A per M2-Bis** (Sprite Atlas in M4)
 - [ ] Le licenze sono state verificate
+- [ ] Gli sprite sono in `Assets/Art/` con le sottocartelle corrette (NON in Resources/)
+- [ ] Import settings: Point filter, Compression None, PPU 64, Sprite Mode Single
+
+### Checklist specifica M2-Bis
+
+**Asset da fonti esterne (reskin):**
+- [ ] `tile_straight.png` — 64x64, da Pipes.png col 0, palette Sand
+- [ ] `tile_curve.png` — 64x64, da Pipes.png col 2, palette Sand
+- [ ] `turtle.png` — 64x64, da Oiboo frame 0,0, palette Turtle Green
+
+**Asset custom (pixel art da creare):**
+- [ ] `collectible_shell.png` — 32x32, spirale Coral Pink
+- [ ] `collectible_baby.png` — 32x32, tartarughina Baby Pink
+- [ ] `cell_nest.png` — 64x64, buca sabbia Sand Warm + guscio
+- [ ] `cell_sea.png` — 64x64, transizione sabbia-mare
+
+**Decisioni grafiche prese:**
+- [x] Tint connessione: overlay semitrasparente (non SpriteRenderer.color)
+- [x] Sfondo celle normali: Sand Light #FFEEAD (tint su bianco, nessun sprite)
+- [x] Port indicators: nascosti
+- [x] Camera background: Sky Blue #87CEEB
+- [x] Caricamento sprite: SceneSetup + serializzazione scena (sprite in Assets/Art/)
+- [x] Sprite colorati WYSIWYG: colore finale nel PNG, codice usa Color.white (nessun tint)
+- [x] Colonne Pipes: Dritto = col 1 (N-S), Curva = col 2 (N-E)
+- [x] Baby follower: scala assoluta 0.72 (60% tartaruga, ~23px)
+- [x] Contorno 2px: rimandato a M4
+- [x] Walk cycle: rimandato a M4
+- [x] Direzione tartaruga: rimandato a M4
+- [x] Bobbing collectibles: rimandato a M4
+- [x] Particelle raccolta: rimandato a M4

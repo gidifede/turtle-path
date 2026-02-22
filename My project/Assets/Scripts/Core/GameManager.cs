@@ -221,7 +221,7 @@ namespace TurtlePath.Core
             resultScreenUI.Show(stars, shellsCollected, totalShells, babiesCollected, totalBabies, hasNext);
         }
 
-        private int CalculateStars()
+        public static int CalculateStars(int shellsCollected, int totalShells, int babiesCollected, int totalBabies)
         {
             // 1★ = complete, 2★ = all shells, 3★ = all shells + all babies
             if (shellsCollected >= totalShells && babiesCollected >= totalBabies)
@@ -229,6 +229,11 @@ namespace TurtlePath.Core
             if (shellsCollected >= totalShells)
                 return 2;
             return 1;
+        }
+
+        private int CalculateStars()
+        {
+            return CalculateStars(shellsCollected, totalShells, babiesCollected, totalBabies);
         }
 
         // --- Result Actions ---

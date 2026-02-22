@@ -140,7 +140,7 @@ Formula: per ogni porta a rotazione 0°, applicare la rotazione in senso orario:
 | **Roccia** | Casella occupata e non attraversabile. Nessuna tessera ci va sopra. Il percorso deve aggirarla. | Roccia/corallo sulla sabbia | Livello 7 |
 | **Buco** | Casella vuota permanente. Non si possono piazzare tessere (neanche dall'inventario). | Buca nella sabbia | Livello 9 |
 
-> **Asset grafici ostacoli:** vedi [art-direction.md - Ambiente Spiaggia](art-direction.md#32-ambiente-spiaggia) (CraftPix seabed objects per rocce/coralli). Colore roccia: Rock Grey `#A0937D` da [palette master](art-direction.md#2-palette-colori-master).
+> **Asset grafici ostacoli:** custom pixel art (roccia e buco, da creare in M3). Colore roccia: Rock Grey `#A0937D` da [palette master](art-direction.md#2-palette-colori-master). Vedi [art-direction.md - Mapping Milestones](art-direction.md#5-mapping-asset--milestones).
 
 ### Struttura dati cella griglia
 ```
@@ -237,7 +237,7 @@ Result → Editing (Rigioca) | LevelSelect (Menu) | Editing next level (Prossimo
 | **Conchiglia** | Su alcune tessere del percorso | Raccolta automatica al passaggio della tartaruga. Contribuisce al punteggio stelle. |
 | **Baby Turtle** | Su alcune tessere del percorso | Raccolta automatica. La baby turtle segue la tartaruga principale fino al mare. Contribuisce al punteggio stelle. |
 
-> **Asset grafici collezionabili:** Sprite conchiglia da CraftPix seabed objects, colore Coral Pink `#FF6F69`. Sprite baby turtle da Schwarnhild, colore Baby Pink `#FFB6C1`. Aspetto sulla tessera (32x32 centrato, bobbing), animazione raccolta e coda baby turtle in [art-direction.md - Collezionabili sulla tessera](art-direction.md#2b-celle-speciali-e-stati-visivi). Asset source in [Ambiente](art-direction.md#32-ambiente-spiaggia) e [Tartaruga](art-direction.md#33-tartaruga).
+> **Asset grafici collezionabili:** Sprite conchiglia custom pixel art 32x32, colore Coral Pink `#FF6F69`. Sprite baby turtle custom pixel art 32x32, colore Baby Pink `#FFB6C1`. Aspetto sulla tessera (32x32 centrato, bobbing), animazione raccolta e coda baby turtle in [art-direction.md - Collezionabili sulla tessera](art-direction.md#2b-celle-speciali-e-stati-visivi).
 
 ### 7.2 Sistema stelle (per livello)
 | Stelle | Condizione |
