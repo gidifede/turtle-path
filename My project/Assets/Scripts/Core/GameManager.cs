@@ -282,7 +282,7 @@ namespace TurtlePath.Core
 
             mainCamera.orthographicSize = Mathf.Max(verticalFit, horizontalFit);
             mainCamera.transform.position = new Vector3(0, 0, -10);
-            mainCamera.backgroundColor = new Color(1f, 0.933f, 0.678f); // #FFEEAD
+            mainCamera.backgroundColor = new Color(0.529f, 0.808f, 0.922f); // Sky Blue #87CEEB
         }
     }
 }

@@ -60,7 +60,7 @@ namespace TurtlePath.UI
                 int stars = SaveManager.GetStars(levelId);
 
                 string starText = "";
-                for (int s = 0; s < stars; s++) starText += "\u2605";
+                for (int s = 0; s < stars; s++) starText += "*";
 
                 if (unlocked)
                 {

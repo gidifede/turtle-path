@@ -272,7 +272,7 @@ public class SceneSetup : EditorWindow
             new Vector2(0.1f, 0.78f), new Vector2(0.9f, 0.9f), 36, UIDark, TextAlignmentOptions.Center);
 
         // Stars
-        GameObject starsGO = CreateText("Stars", panel.transform, "\u2605\u2605\u2605",
+        GameObject starsGO = CreateText("Stars", panel.transform, "***",
             new Vector2(0.1f, 0.65f), new Vector2(0.9f, 0.78f), 48, StarGold, TextAlignmentOptions.Center);
 
         // Shells stat

@@ -31,10 +31,10 @@ namespace TurtlePath.UI
         public void Show(int stars, int shells, int totalShells, int babies, int totalBabies, bool hasNext)
         {
             string starDisplay = "";
-            for (int i = 0; i < stars; i++) starDisplay += "\u2605";
-            for (int i = stars; i < 3; i++) starDisplay += "\u2606";
+            for (int i = 0; i < stars; i++) starDisplay += "<color=#FFD700>*</color>";
+            for (int i = stars; i < 3; i++) starDisplay += "<color=#999999>*</color>";
 
-            starsText.text = $"<color=#FFD700>{starDisplay}</color>";
+            starsText.text = starDisplay;
             shellsText.text = $"Conchiglie: {shells}/{totalShells}";
             babiesText.text = $"Baby turtle: {babies}/{totalBabies}";
 
