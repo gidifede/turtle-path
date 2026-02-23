@@ -53,13 +53,13 @@ public class SceneSetup : EditorWindow
         }
 
         // --- Load M2-Bis sprites (null if files don't exist yet) ---
-        Sprite tileSprite_straight = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/tile_straight.png");
-        Sprite tileSprite_curve = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/tile_curve.png");
-        Sprite cellSprite_nest = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/cell_nest.png");
-        Sprite cellSprite_sea = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/cell_sea.png");
-        Sprite collectibleSprite_shell = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/collectible_shell.png");
-        Sprite collectibleSprite_baby = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/collectible_baby.png");
-        Sprite turtleSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/turtle.png");
+        Sprite tileSprite_straight = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Tiles/tile_straight.png");
+        Sprite tileSprite_curve = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Tiles/tile_curve.png");
+        Sprite cellSprite_nest = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Cells/cell_nest.png");
+        Sprite cellSprite_sea = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Cells/cell_sea.png");
+        Sprite collectibleSprite_shell = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Collectibles/collectible_shell.png");
+        Sprite collectibleSprite_baby = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Collectibles/collectible_baby.png");
+        Sprite turtleSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Characters/turtle.png");
 
         // --- GridManager ---
         GameObject gridManagerGO = new GameObject("GridManager");

@@ -1,8 +1,8 @@
 # Turtle Path - Contesto Progetto
 
 ## Stato attuale
-**Fase:** M2 completata. Pronto per M2-Bis (Visual Base).
-**Ultima sessione:** 2026-02-22
+**Fase:** M2-Bis completata. Sprite custom, overlay connessione, pathfinding funzionante con grafica.
+**Ultima sessione:** 2026-02-23
 
 ## Documentazione
 Tutta la documentazione del progetto si trova in `docs/`. Leggere questi file IN ORDINE prima di procedere:
