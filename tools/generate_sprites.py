@@ -175,6 +175,219 @@ def generate_curve():
 
 
 # =============================================================
+# 2b. T-PIECE TILE (N-E-S) — 64x64
+# =============================================================
+def generate_t():
+    S = 64
+    img = Image.new("RGBA", (S, S), TRANSPARENT)
+
+    pw = 32   # path width (same as straight/curve)
+    half = pw // 2
+
+    # T-piece has 3 openings: North, East, South
+    # Center of the tile: (S//2, S//2) = (32, 32)
+    # North opening: vertical strip at x=[16..48], y=[0..32]
+    # South opening: vertical strip at x=[16..48], y=[32..64]
+    # East opening:  horizontal strip at y=[16..48], x=[32..64]
+
+    left = S // 2 - half   # 16
+    right = S // 2 + half  # 48
+
+    random.seed(303)
+
+    for y in range(S):
+        for x in range(S):
+            in_path = False
+            on_border = False
+
+            # North-South vertical strip (full height)
+            if left - 1 <= x <= right:
+                if x == left - 1 or x == right:
+                    on_border = True
+                elif left <= x < right:
+                    in_path = True
+
+            # East horizontal strip (right half)
+            if x >= left and left - 1 <= y <= right:
+                if y == left - 1 or y == right:
+                    # Border only in east section (not overlapping with vertical path)
+                    if x >= right:
+                        on_border = True
+                elif left <= y < right:
+                    if x >= left:
+                        in_path = True
+
+            if on_border and not in_path:
+                img.putpixel((x, y), a(DEEP_BROWN))
+            elif in_path:
+                img.putpixel((x, y), a(SAND_WARM))
+
+    # Center highlight lines
+    cx = S // 2
+    cy = S // 2
+    # Vertical center line (full height)
+    for y in range(S):
+        for x in range(cx - 2, cx + 3):
+            if img.getpixel((x, y))[3] > 0:
+                r, g, b, _ = img.getpixel((x, y))
+                if (r, g, b) == SAND_WARM:
+                    img.putpixel((x, y), a(SAND_LIGHT))
+    # Horizontal center line (east half)
+    for x in range(cx, S):
+        for y in range(cy - 2, cy + 3):
+            if img.getpixel((x, y))[3] > 0:
+                r, g, b, _ = img.getpixel((x, y))
+                if (r, g, b) == SAND_WARM:
+                    img.putpixel((x, y), a(SAND_LIGHT))
+
+    # Sand grains
+    for _ in range(35):
+        gx = random.randint(0, S - 1)
+        gy = random.randint(0, S - 1)
+        if img.getpixel((gx, gy))[3] > 0:
+            r, g, b, _ = img.getpixel((gx, gy))
+            if (r, g, b) == SAND_WARM:
+                img.putpixel((gx, gy), a(random.choice([SAND_DARK, SAND_LIGHT])))
+
+    path = os.path.join(ART_DIR, "Tiles", "tile_t.png")
+    img.save(path)
+    print(f"  Saved {path}")
+
+
+# =============================================================
+# 2c. ROCK OBSTACLE — 64x64
+# =============================================================
+ROCK_GREY     = (160, 147, 125)   # #A0937D
+ROCK_DARK     = (120, 110, 95)    # darker grey for depth
+ROCK_LIGHT    = (190, 180, 160)   # highlight
+
+def generate_rock():
+    S = 64
+    img = Image.new("RGBA", (S, S), TRANSPARENT)
+    cx, cy = S // 2, S // 2
+
+    random.seed(404)
+
+    # Sand base (full cell)
+    for y in range(S):
+        for x in range(S):
+            img.putpixel((x, y), a(SAND_LIGHT))
+
+    # Main rock body — irregular shape using overlapping ellipses
+    draw = ImageDraw.Draw(img)
+    # Large central rock
+    draw.ellipse([cx - 20, cy - 16, cx + 18, cy + 14], fill=a(ROCK_GREY))
+    # Top bump
+    draw.ellipse([cx - 12, cy - 22, cx + 8, cy - 8], fill=a(ROCK_GREY))
+    # Right bump
+    draw.ellipse([cx + 4, cy - 10, cx + 22, cy + 8], fill=a(ROCK_GREY))
+
+    # Darker crevices
+    draw.ellipse([cx - 8, cy - 4, cx + 2, cy + 6], fill=a(ROCK_DARK))
+    draw.arc([cx - 16, cy - 12, cx + 14, cy + 10], 30, 150, fill=a(ROCK_DARK), width=2)
+
+    # Highlights
+    draw.ellipse([cx - 14, cy - 18, cx - 6, cy - 12], fill=a(ROCK_LIGHT))
+    draw.ellipse([cx + 8, cy - 16, cx + 14, cy - 10], fill=a(ROCK_LIGHT))
+
+    # Outline
+    for y2 in range(S):
+        for x2 in range(S):
+            r, g, b, al = img.getpixel((x2, y2))
+            if (r, g, b) == SAND_LIGHT and al == 255:
+                # Check if adjacent to rock
+                for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                    nx, ny = x2 + dx, y2 + dy
+                    if 0 <= nx < S and 0 <= ny < S:
+                        nr, ng, nb, na = img.getpixel((nx, ny))
+                        if na == 255 and (nr, ng, nb) in [ROCK_GREY, ROCK_DARK, ROCK_LIGHT]:
+                            img.putpixel((x2, y2), a(DEEP_BROWN))
+                            break
+
+    # Sand texture dots around rock
+    for _ in range(20):
+        gx = random.randint(2, S - 3)
+        gy = random.randint(2, S - 3)
+        r, g, b, _ = img.getpixel((gx, gy))
+        if (r, g, b) == SAND_LIGHT:
+            img.putpixel((gx, gy), a(random.choice([SAND_DARK, SAND_WARM])))
+
+    path = os.path.join(ART_DIR, "Cells", "obstacle_rock.png")
+    img.save(path)
+    print(f"  Saved {path}")
+
+
+# =============================================================
+# 2d. HOLE OBSTACLE — 64x64
+# =============================================================
+HOLE_CENTER   = (40, 30, 25)      # very dark brown center
+
+def generate_hole():
+    S = 64
+    img = Image.new("RGBA", (S, S), TRANSPARENT)
+    cx, cy = S // 2, S // 2
+
+    random.seed(505)
+
+    # Sand base (full cell)
+    for y in range(S):
+        for x in range(S):
+            img.putpixel((x, y), a(SAND_LIGHT))
+
+    # Hole: oval depression with radial gradient
+    rx, ry = 22, 18  # radii of the oval
+
+    for y2 in range(S):
+        for x2 in range(S):
+            dx = (x2 - cx) / rx
+            dy = (y2 - cy) / ry
+            dist = math.sqrt(dx * dx + dy * dy)
+
+            if dist < 1.0:
+                # Inside hole — gradient from edge to center
+                t = dist  # 0=center, 1=edge
+                if t < 0.4:
+                    # Deep center
+                    img.putpixel((x2, y2), a(HOLE_CENTER))
+                elif t < 0.7:
+                    # Mid shadow
+                    blend = (t - 0.4) / 0.3
+                    c = tuple(int(HOLE_CENTER[i] + (DEEP_BROWN[i] - HOLE_CENTER[i]) * blend) for i in range(3))
+                    img.putpixel((x2, y2), c + (255,))
+                else:
+                    # Outer edge
+                    blend = (t - 0.7) / 0.3
+                    c = tuple(int(DEEP_BROWN[i] + (SAND_DARK[i] - DEEP_BROWN[i]) * blend) for i in range(3))
+                    img.putpixel((x2, y2), c + (255,))
+            elif dist < 1.15:
+                # Crumbling edge
+                img.putpixel((x2, y2), a(SAND_DARK))
+
+    # Edge cracks radiating outward
+    for angle in range(0, 360, 45):
+        rad = math.radians(angle + random.randint(-10, 10))
+        for r in range(int(rx * 0.9), int(rx * 1.3)):
+            crack_x = int(cx + r * math.cos(rad) * (rx / 22))
+            crack_y = int(cy + r * math.sin(rad) * (ry / 18))
+            if 0 <= crack_x < S and 0 <= crack_y < S:
+                curr = img.getpixel((crack_x, crack_y))
+                if curr[:3] == SAND_LIGHT:
+                    img.putpixel((crack_x, crack_y), a(SAND_DARK))
+
+    # Sand texture
+    for _ in range(15):
+        gx = random.randint(2, S - 3)
+        gy = random.randint(2, S - 3)
+        r, g, b, _ = img.getpixel((gx, gy))
+        if (r, g, b) == SAND_LIGHT:
+            img.putpixel((gx, gy), a(random.choice([SAND_DARK, SAND_WARM])))
+
+    path = os.path.join(ART_DIR, "Cells", "obstacle_hole.png")
+    img.save(path)
+    print(f"  Saved {path}")
+
+
+# =============================================================
 # 3. TURTLE SPRITE — 64x64 (from Oiboo spritesheet)
 # =============================================================
 def generate_turtle():
@@ -413,11 +626,12 @@ def generate_sea():
 # =============================================================
 def main():
     ensure_dirs()
-    print("=== M2-Bis Sprite Generation v2 ===\n")
+    print("=== Sprite Generation (M2-Bis + M3) ===\n")
 
     print("1. Tile sprites (custom drawn)...")
     generate_straight()
     generate_curve()
+    generate_t()
 
     print("2. Turtle sprite (Oiboo palette remap)...")
     generate_turtle()
@@ -434,7 +648,11 @@ def main():
     print("6. Sea cell...")
     generate_sea()
 
-    print("\n=== Done! 7 sprites generated. ===")
+    print("7. Obstacle sprites...")
+    generate_rock()
+    generate_hole()
+
+    print("\n=== Done! 10 sprites generated. ===")
 
 
 if __name__ == "__main__":

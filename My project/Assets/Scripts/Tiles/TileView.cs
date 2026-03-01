@@ -24,6 +24,7 @@ namespace TurtlePath.Tiles
         private static readonly Color PortColor = new Color(0.8f, 0.2f, 0.2f);         // Red for ports
 
         public Cell Cell => cell;
+        public bool FromInventory { get; set; }
 
         public void Initialize(Cell cell, float cellSize, Sprite sprite)
         {
@@ -113,6 +114,7 @@ namespace TurtlePath.Tiles
         private void OnMouseDown()
         {
             if (isAnimating) return;
+            if (cell == null) return;
             if (!cell.IsRotatable()) return;
 
             OnClicked?.Invoke(this);

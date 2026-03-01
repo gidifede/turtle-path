@@ -52,11 +52,14 @@ public class SceneSetup : EditorWindow
             squareSprite = CreateFallbackSprite();
         }
 
-        // --- Load M2-Bis sprites (null if files don't exist yet) ---
+        // --- Load sprites (null if files don't exist yet) ---
         Sprite tileSprite_straight = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Tiles/tile_straight.png");
         Sprite tileSprite_curve = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Tiles/tile_curve.png");
+        Sprite tileSprite_t = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Tiles/tile_t.png");
         Sprite cellSprite_nest = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Cells/cell_nest.png");
         Sprite cellSprite_sea = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Cells/cell_sea.png");
+        Sprite cellSprite_rock = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Cells/obstacle_rock.png");
+        Sprite cellSprite_hole = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Cells/obstacle_hole.png");
         Sprite collectibleSprite_shell = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Collectibles/collectible_shell.png");
         Sprite collectibleSprite_baby = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Collectibles/collectible_baby.png");
         Sprite turtleSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Characters/turtle.png");
@@ -67,8 +70,11 @@ public class SceneSetup : EditorWindow
         gridManager.cellSprite = squareSprite;
         gridManager.cellSprite_nest = cellSprite_nest;
         gridManager.cellSprite_sea = cellSprite_sea;
+        gridManager.cellSprite_rock = cellSprite_rock;
+        gridManager.cellSprite_hole = cellSprite_hole;
         gridManager.tileSprite_straight = tileSprite_straight;
         gridManager.tileSprite_curve = tileSprite_curve;
+        gridManager.tileSprite_t = tileSprite_t;
         gridManager.collectibleSprite_shell = collectibleSprite_shell;
         gridManager.collectibleSprite_baby = collectibleSprite_baby;
 
@@ -101,6 +107,8 @@ public class SceneSetup : EditorWindow
         GameObject gameplayPanel = CreateGameplayPanel(canvasGO.transform);
         GameObject resultPanel = CreateResultPanel(canvasGO.transform);
         GameObject creditsPanel = CreateCreditsPanel(canvasGO.transform);
+        GameObject pausePanel = CreatePausePanel(canvasGO.transform);
+        GameObject inventoryPanel = CreateInventoryPanel(canvasGO.transform);
 
         // Set initial states
         mainMenuPanel.SetActive(true);
@@ -108,6 +116,8 @@ public class SceneSetup : EditorWindow
         gameplayPanel.SetActive(false);
         resultPanel.SetActive(false);
         creditsPanel.SetActive(false);
+        pausePanel.SetActive(false);
+        inventoryPanel.SetActive(false);
 
         // --- UIManager ---
         GameObject uiManagerGO = new GameObject("UIManager");
@@ -117,6 +127,10 @@ public class SceneSetup : EditorWindow
         uiManager.gameplayPanel = gameplayPanel;
         uiManager.resultPanel = resultPanel;
         uiManager.creditsPanel = creditsPanel;
+        uiManager.pausePanel = pausePanel;
+
+        // --- Inventory UI ---
+        TileInventoryUI inventoryUI = inventoryPanel.GetComponent<TileInventoryUI>();
 
         // --- GameManager ---
         GameObject gameManagerGO = new GameObject("GameManager");
@@ -130,6 +144,8 @@ public class SceneSetup : EditorWindow
         gameManager.gameplayUI = gameplayPanel.GetComponent<GameplayUI>();
         gameManager.resultScreenUI = resultPanel.GetComponent<ResultScreenUI>();
         gameManager.creditsUI = creditsPanel.GetComponent<CreditsUI>();
+        gameManager.inventoryUI = inventoryUI;
+        gameManager.pauseMenuUI = pausePanel.GetComponent<PauseMenuUI>();
 
         // --- Mark dirty ---
         EditorUtility.SetDirty(gameManagerGO);
@@ -140,7 +156,7 @@ public class SceneSetup : EditorWindow
         EditorUtility.SetDirty(eventSystemGO);
         if (cam != null) EditorUtility.SetDirty(cam.gameObject);
 
-        Debug.Log("Turtle Path M2: Scene setup completed! Press Play to test.");
+        Debug.Log("Turtle Path M3: Scene setup completed! Press Play to test.");
     }
 
     // ========================
@@ -185,40 +201,52 @@ public class SceneSetup : EditorWindow
 
         // Title
         CreateText("Title", panel.transform, "Scegli livello",
-            new Vector2(0.1f, 0.8f), new Vector2(0.9f, 0.92f), 36, UIDark, TextAlignmentOptions.Center);
+            new Vector2(0.1f, 0.88f), new Vector2(0.9f, 0.96f), 32, UIDark, TextAlignmentOptions.Center);
 
-        // 4 level buttons in a 2x2 grid
-        Button[] levelButtons = new Button[4];
-        TextMeshProUGUI[] levelTexts = new TextMeshProUGUI[4];
+        // 15 level buttons in a 3x5 grid
+        int totalButtons = 15;
+        int cols = 3;
+        int rows = 5;
 
-        float startX = 0.1f;
-        float btnWidth = 0.35f;
-        float gapX = 0.1f;
-        float startY = 0.45f;
-        float btnHeight = 0.15f;
-        float gapY = 0.05f;
+        Button[] levelButtons = new Button[totalButtons];
+        TextMeshProUGUI[] levelTexts = new TextMeshProUGUI[totalButtons];
 
-        for (int i = 0; i < 4; i++)
+        float startX = 0.05f;
+        float endX = 0.95f;
+        float gapX = 0.03f;
+        float btnWidth = (endX - startX - gapX * (cols - 1)) / cols;
+
+        float startY = 0.14f;  // bottom of grid area
+        float endY = 0.86f;    // top of grid area
+        float gapY = 0.02f;
+        float btnHeight = (endY - startY - gapY * (rows - 1)) / rows;
+
+        for (int i = 0; i < totalButtons; i++)
         {
-            int col = i % 2;
-            int row = i / 2;
+            int col = i % cols;
+            int row = i / cols;
 
             float x0 = startX + col * (btnWidth + gapX);
             float x1 = x0 + btnWidth;
-            float y1 = startY + (1 - row) * (btnHeight + gapY) + btnHeight;
+            // Top row first (row 0 = top)
+            float y1 = endY - row * (btnHeight + gapY);
             float y0 = y1 - btnHeight;
 
             string btnName = $"LevelButton_{i + 1}";
             GameObject btnGO = CreateButton(btnName, panel.transform, $"{i + 1}",
                 new Vector2(x0, y0), new Vector2(x1, y1), OceanTeal);
 
+            // Smaller font for level buttons
+            TextMeshProUGUI tmp = btnGO.GetComponentInChildren<TextMeshProUGUI>();
+            tmp.fontSize = 20;
+
             levelButtons[i] = btnGO.GetComponent<Button>();
-            levelTexts[i] = btnGO.GetComponentInChildren<TextMeshProUGUI>();
+            levelTexts[i] = tmp;
         }
 
         // Back button
         GameObject backBtnGO = CreateButton("BackButton", panel.transform, "Indietro",
-            new Vector2(0.25f, 0.08f), new Vector2(0.75f, 0.18f), SandWarm);
+            new Vector2(0.25f, 0.02f), new Vector2(0.75f, 0.10f), SandWarm);
 
         // Add LevelSelectUI component
         LevelSelectUI levelSelectUI = panel.AddComponent<LevelSelectUI>();
@@ -252,10 +280,17 @@ public class SceneSetup : EditorWindow
         GameObject babyGO = CreateText("BabyCounter", panel.transform, "Baby: 0/0",
             new Vector2(0.5f, 0.92f), new Vector2(0.98f, 0.98f), 22, UIDark, TextAlignmentOptions.Right);
 
+        // Pause button (top-right corner)
+        GameObject pauseBtnGO = CreateButton("PauseButton", panel.transform, "||",
+            new Vector2(0.85f, 0.92f), new Vector2(0.98f, 0.98f), new Color(1f, 1f, 1f, 0.7f));
+        TextMeshProUGUI pauseTmp = pauseBtnGO.GetComponentInChildren<TextMeshProUGUI>();
+        pauseTmp.fontSize = 18;
+
         // Add GameplayUI component
         GameplayUI gameplayUI = panel.AddComponent<GameplayUI>();
         gameplayUI.shellCounterText = shellGO.GetComponent<TextMeshProUGUI>();
         gameplayUI.babyCounterText = babyGO.GetComponent<TextMeshProUGUI>();
+        gameplayUI.pauseButton = pauseBtnGO.GetComponent<Button>();
 
         return panel;
     }
@@ -342,6 +377,87 @@ public class SceneSetup : EditorWindow
         // Add CreditsUI component
         CreditsUI creditsUI = panel.AddComponent<CreditsUI>();
         creditsUI.backButton = backBtnGO.GetComponent<Button>();
+
+        return panel;
+    }
+
+    // ========================
+    // PAUSE PANEL
+    // ========================
+    private static GameObject CreatePausePanel(Transform parent)
+    {
+        GameObject panel = CreatePanel("PausePanel", parent, new Color(0, 0, 0, 0.6f));
+
+        // Title
+        CreateText("PauseTitle", panel.transform, "Pausa",
+            new Vector2(0.1f, 0.7f), new Vector2(0.9f, 0.82f), 40, Color.white, TextAlignmentOptions.Center);
+
+        // Resume button
+        GameObject resumeBtnGO = CreateButton("ResumeButton", panel.transform, "Riprendi",
+            new Vector2(0.2f, 0.52f), new Vector2(0.8f, 0.64f), OceanTeal);
+
+        // Restart button
+        GameObject restartBtnGO = CreateButton("RestartButton", panel.transform, "Ricomincia",
+            new Vector2(0.2f, 0.38f), new Vector2(0.8f, 0.50f), SandWarm);
+
+        // Menu button
+        GameObject menuBtnGO = CreateButton("MenuButton", panel.transform, "Menu",
+            new Vector2(0.2f, 0.24f), new Vector2(0.8f, 0.36f), new Color(0.8f, 0.8f, 0.8f));
+
+        // Audio toggle
+        GameObject audioBtnGO = CreateButton("AudioToggle", panel.transform, "Audio: ON",
+            new Vector2(0.25f, 0.12f), new Vector2(0.75f, 0.22f), BGOffWhite);
+
+        // Add PauseMenuUI component
+        PauseMenuUI pauseUI = panel.AddComponent<PauseMenuUI>();
+        pauseUI.resumeButton = resumeBtnGO.GetComponent<Button>();
+        pauseUI.restartButton = restartBtnGO.GetComponent<Button>();
+        pauseUI.menuButton = menuBtnGO.GetComponent<Button>();
+        pauseUI.audioToggleButton = audioBtnGO.GetComponent<Button>();
+        pauseUI.audioToggleText = audioBtnGO.GetComponentInChildren<TextMeshProUGUI>();
+
+        return panel;
+    }
+
+    // ========================
+    // INVENTORY PANEL
+    // ========================
+    private static GameObject CreateInventoryPanel(Transform parent)
+    {
+        GameObject panel = new GameObject("InventoryPanel");
+        panel.transform.SetParent(parent, false);
+
+        RectTransform rect = panel.AddComponent<RectTransform>();
+        // Anchored to bottom, 80px tall
+        rect.anchorMin = new Vector2(0, 0);
+        rect.anchorMax = new Vector2(1, 0);
+        rect.pivot = new Vector2(0.5f, 0);
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = new Vector2(0, 80);
+
+        Image bg = panel.AddComponent<Image>();
+        bg.color = BGOffWhite;
+        bg.raycastTarget = true;
+
+        // Slot container (horizontal layout)
+        GameObject containerGO = new GameObject("SlotContainer");
+        containerGO.transform.SetParent(panel.transform, false);
+
+        RectTransform containerRect = containerGO.AddComponent<RectTransform>();
+        containerRect.anchorMin = new Vector2(0.05f, 0.05f);
+        containerRect.anchorMax = new Vector2(0.95f, 0.95f);
+        containerRect.offsetMin = Vector2.zero;
+        containerRect.offsetMax = Vector2.zero;
+
+        HorizontalLayoutGroup layout = containerGO.AddComponent<HorizontalLayoutGroup>();
+        layout.spacing = 8;
+        layout.childAlignment = TextAnchor.MiddleCenter;
+        layout.childForceExpandWidth = false;
+        layout.childForceExpandHeight = false;
+
+        // Add TileInventoryUI component
+        TileInventoryUI inventoryUI = panel.AddComponent<TileInventoryUI>();
+        inventoryUI.slotContainer = containerRect;
 
         return panel;
     }

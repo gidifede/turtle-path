@@ -14,6 +14,8 @@ namespace TurtlePath.Level
         public Vector2Int seaPos;
         public TileEntry[] tiles;
         public CollectibleEntry[] collectibles;
+        public ObstacleEntry[] obstacles;
+        public InventoryEntry[] inventory;
     }
 
     [Serializable]
@@ -43,6 +45,30 @@ namespace TurtlePath.Level
             this.position = position;
             this.rotation = rotation;
             this.isFixed = isFixed;
+        }
+    }
+
+    [Serializable]
+    public class ObstacleEntry
+    {
+        public CellType type;
+        public Vector2Int position;
+
+        public ObstacleEntry(CellType type, Vector2Int position)
+        {
+            this.type = type;
+            this.position = position;
+        }
+    }
+
+    [Serializable]
+    public class InventoryEntry
+    {
+        public TileType type;
+
+        public InventoryEntry(TileType type)
+        {
+            this.type = type;
         }
     }
 }

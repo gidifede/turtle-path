@@ -26,12 +26,15 @@ namespace TurtlePath.Core
         public GameplayUI gameplayUI;
         public ResultScreenUI resultScreenUI;
         public CreditsUI creditsUI;
+        public TileInventoryUI inventoryUI;
+        public PauseMenuUI pauseMenuUI;
 
         private GameState state = GameState.MainMenu;
         private LevelData currentLevel;
         private int currentLevelId;
         private int shellsCollected, totalShells;
         private int babiesCollected, totalBabies;
+        private bool hasInventory;
 
         private void Start()
         {
@@ -40,6 +43,10 @@ namespace TurtlePath.Core
             levelSelectUI.Initialize(uiManager, OnLevelSelected);
             resultScreenUI.Initialize(OnNextLevel, OnReplay, OnGoToMenu);
             creditsUI.Initialize(uiManager);
+            if (pauseMenuUI != null)
+                pauseMenuUI.Initialize(ResumeGame, OnPauseRestart, GoToMenu);
+            if (gameplayUI.pauseButton != null)
+                gameplayUI.pauseButton.onClick.AddListener(PauseGame);
 
             // Show main menu
             GoToMenu();
@@ -47,9 +54,12 @@ namespace TurtlePath.Core
 
         private void Update()
         {
-            if (state == GameState.Editing && Input.GetKeyDown(KeyCode.R))
+            if (state == GameState.Editing)
             {
-                RestartCurrentLevel();
+                if (Input.GetKeyDown(KeyCode.R))
+                    RestartCurrentLevel();
+                if (Input.GetKeyDown(KeyCode.Escape))
+                    TogglePause();
             }
         }
 
@@ -57,6 +67,7 @@ namespace TurtlePath.Core
 
         public void GoToMenu()
         {
+            Time.timeScale = 1f;
             StopAllCoroutines();
             gridManager.OnTileClicked -= OnTileClicked;
             turtle.OnCollectibleReached -= OnCollectibleReached;
@@ -64,6 +75,7 @@ namespace TurtlePath.Core
             state = GameState.MainMenu;
             gridManager.ClearGrid();
             turtle.ResetTurtle();
+            HideInventory();
             mainMenuUI.Refresh();
             uiManager.ShowPanel("MainMenu");
         }
@@ -91,6 +103,7 @@ namespace TurtlePath.Core
             turtle.OnPathCompleted -= OnTurtleArrived;
             gridManager.ClearGrid();
             turtle.ResetTurtle();
+            HideInventory();
 
             currentLevelId = levelId;
             state = GameState.Editing;
@@ -132,8 +145,37 @@ namespace TurtlePath.Core
             uiManager.ShowPanel("Gameplay");
             gameplayUI.ResetCounters(totalShells, totalBabies);
 
+            // Inventory
+            hasInventory = currentLevel.inventory != null && currentLevel.inventory.Length > 0;
+            if (hasInventory)
+                ShowInventory();
+
             ConfigureCamera();
             ValidatePath();
+        }
+
+        // --- Inventory ---
+
+        private void ShowInventory()
+        {
+            if (inventoryUI == null) return;
+            inventoryUI.gameObject.SetActive(true);
+            inventoryUI.Setup(currentLevel.inventory, gridManager, mainCamera);
+            inventoryUI.OnInventoryChanged += OnInventoryChanged;
+        }
+
+        private void HideInventory()
+        {
+            if (inventoryUI == null) return;
+            inventoryUI.OnInventoryChanged -= OnInventoryChanged;
+            inventoryUI.Clear();
+            inventoryUI.gameObject.SetActive(false);
+            hasInventory = false;
+        }
+
+        private void OnInventoryChanged()
+        {
+            StartCoroutine(ValidateAfterFrame());
         }
 
         // --- Gameplay ---
@@ -142,6 +184,19 @@ namespace TurtlePath.Core
         {
             if (state != GameState.Editing) return;
             if (tileView.IsAnimating) return;
+
+            // If tile is from inventory, remove it on click (return to inventory)
+            if (tileView.FromInventory)
+            {
+                Vector2Int pos = tileView.Cell.GridPosition;
+                TileType? removed = gridManager.RemoveInventoryTile(pos);
+                if (removed.HasValue && inventoryUI != null)
+                {
+                    inventoryUI.ReturnTile(removed.Value);
+                }
+                StartCoroutine(ValidateAfterFrame());
+                return;
+            }
 
             tileView.AnimateRotation();
             StartCoroutine(ValidateAfterFrame());
@@ -223,7 +278,7 @@ namespace TurtlePath.Core
 
         public static int CalculateStars(int shellsCollected, int totalShells, int babiesCollected, int totalBabies)
         {
-            // 1★ = complete, 2★ = all shells, 3★ = all shells + all babies
+            // 1 star = complete, 2 stars = all shells, 3 stars = all shells + all babies
             if (shellsCollected >= totalShells && babiesCollected >= totalBabies)
                 return 3;
             if (shellsCollected >= totalShells)
@@ -263,7 +318,43 @@ namespace TurtlePath.Core
             turtle.OnPathCompleted -= OnTurtleArrived;
             gridManager.ClearGrid();
             turtle.ResetTurtle();
+            HideInventory();
             LoadLevel(currentLevelId);
+        }
+
+        // --- Pause ---
+
+        private void TogglePause()
+        {
+            if (uiManager.IsPanelActive("Pause"))
+            {
+                ResumeGame();
+            }
+            else
+            {
+                PauseGame();
+            }
+        }
+
+        public void PauseGame()
+        {
+            if (state != GameState.Editing) return;
+            Time.timeScale = 0f;
+            uiManager.ShowPanel("Pause");
+        }
+
+        public void ResumeGame()
+        {
+            Time.timeScale = 1f;
+            uiManager.ShowPanel("Gameplay");
+            if (hasInventory && inventoryUI != null)
+                inventoryUI.gameObject.SetActive(true);
+        }
+
+        private void OnPauseRestart()
+        {
+            Time.timeScale = 1f;
+            RestartCurrentLevel();
         }
 
         // --- Camera ---
@@ -277,11 +368,17 @@ namespace TurtlePath.Core
             float gridHeight = gridManager.Height * 1.0f;
             float gridWidth = gridManager.Width * 1.0f;
 
-            float verticalFit = (gridHeight + 2f) / 2f;
+            // Extra vertical margin when inventory is present (80px bar at bottom)
+            float extraMargin = hasInventory ? 1.0f : 0f;
+
+            float verticalFit = (gridHeight + 2f + extraMargin) / 2f;
             float horizontalFit = (gridWidth + 1f) / (2f * aspect);
 
             mainCamera.orthographicSize = Mathf.Max(verticalFit, horizontalFit);
-            mainCamera.transform.position = new Vector3(0, 0, -10);
+
+            // Offset camera up slightly when inventory is present to center the grid above the bar
+            float yOffset = hasInventory ? extraMargin / 2f : 0f;
+            mainCamera.transform.position = new Vector3(0, yOffset, -10);
             mainCamera.backgroundColor = new Color(0.529f, 0.808f, 0.922f); // Sky Blue #87CEEB
         }
     }

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 namespace TurtlePath.UI
@@ -7,6 +8,7 @@ namespace TurtlePath.UI
     {
         public TextMeshProUGUI shellCounterText;
         public TextMeshProUGUI babyCounterText;
+        public Button pauseButton;
 
         public void UpdateCounters(int shells, int totalShells, int babies, int totalBabies)
         {

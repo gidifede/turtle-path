@@ -1,0 +1,27 @@
+{
+  "id": 12,
+  "gridSize": { "width": 6, "height": 6 },
+  "nest": { "x": 2, "y": 0 },
+  "sea": { "x": 4, "y": 5 },
+  "tiles": [
+    { "type": "straight", "position": { "x": 2, "y": 2 }, "rotation": 0,   "isFixed": false },
+    { "type": "curve",    "position": { "x": 2, "y": 3 }, "rotation": 0,   "isFixed": false },
+    { "type": "straight", "position": { "x": 3, "y": 3 }, "rotation": 90,  "isFixed": false },
+    { "type": "curve",    "position": { "x": 4, "y": 3 }, "rotation": 180, "isFixed": false }
+  ],
+  "obstacles": [
+    { "type": "rock", "position": { "x": 3, "y": 1 } },
+    { "type": "rock", "position": { "x": 3, "y": 2 } },
+    { "type": "hole", "position": { "x": 1, "y": 3 } }
+  ],
+  "inventory": [
+    { "type": "straight" },
+    { "type": "straight" }
+  ],
+  "collectibles": [
+    { "type": "shell",       "position": { "x": 2, "y": 2 } },
+    { "type": "shell",       "position": { "x": 2, "y": 3 } },
+    { "type": "shell",       "position": { "x": 4, "y": 3 } },
+    { "type": "baby_turtle", "position": { "x": 3, "y": 3 } }
+  ]
+}

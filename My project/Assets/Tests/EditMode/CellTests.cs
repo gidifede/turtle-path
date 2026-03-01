@@ -75,5 +75,37 @@ namespace TurtlePath.Tests
 
             Assert.IsFalse(cell.IsRotatable());
         }
+
+        [Test]
+        public void Rock_HasNoPorts()
+        {
+            var cell = new Cell(Vector2Int.zero, CellType.Rock);
+            var ports = cell.GetPorts();
+
+            Assert.AreEqual(0, ports.Length);
+        }
+
+        [Test]
+        public void Hole_HasNoPorts()
+        {
+            var cell = new Cell(Vector2Int.zero, CellType.Hole);
+            var ports = cell.GetPorts();
+
+            Assert.AreEqual(0, ports.Length);
+        }
+
+        [Test]
+        public void IsRotatable_Rock_ReturnsFalse()
+        {
+            var cell = new Cell(Vector2Int.zero, CellType.Rock);
+            Assert.IsFalse(cell.IsRotatable());
+        }
+
+        [Test]
+        public void IsRotatable_Hole_ReturnsFalse()
+        {
+            var cell = new Cell(Vector2Int.zero, CellType.Hole);
+            Assert.IsFalse(cell.IsRotatable());
+        }
     }
 }

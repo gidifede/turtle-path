@@ -1,7 +1,8 @@
 # Turtle Path - Contesto Progetto
 
 ## Stato attuale
-**Fase:** M2-Bis completata. Sprite custom, overlay connessione, pathfinding funzionante con grafica.
+**Fase:** M2-Bis completata. Pronto per M3 (Content).
+**Branch attivo:** `m3-content`
 **Ultima sessione:** 2026-02-23
 
 ## Documentazione

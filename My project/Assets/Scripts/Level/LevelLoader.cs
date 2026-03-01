@@ -6,7 +6,7 @@ namespace TurtlePath.Level
 {
     public static class LevelLoader
     {
-        private const int TotalLevels = 4;
+        private const int TotalLevels = 15;
 
         public static int GetTotalLevels() => TotalLevels;
 
@@ -69,6 +69,41 @@ namespace TurtlePath.Level
                 level.collectibles = new CollectibleEntry[0];
             }
 
+            // Convert obstacles
+            if (json.obstacles != null && json.obstacles.Length > 0)
+            {
+                level.obstacles = new ObstacleEntry[json.obstacles.Length];
+                for (int i = 0; i < json.obstacles.Length; i++)
+                {
+                    JsonObstacleEntry jo = json.obstacles[i];
+                    CellType obstacleType = ParseObstacleType(jo.type);
+                    level.obstacles[i] = new ObstacleEntry(
+                        obstacleType,
+                        new Vector2Int(jo.position.x, jo.position.y)
+                    );
+                }
+            }
+            else
+            {
+                level.obstacles = new ObstacleEntry[0];
+            }
+
+            // Convert inventory
+            if (json.inventory != null && json.inventory.Length > 0)
+            {
+                level.inventory = new InventoryEntry[json.inventory.Length];
+                for (int i = 0; i < json.inventory.Length; i++)
+                {
+                    JsonInventoryEntry ji = json.inventory[i];
+                    TileType tileType = ParseTileType(ji.type);
+                    level.inventory[i] = new InventoryEntry(tileType);
+                }
+            }
+            else
+            {
+                level.inventory = new InventoryEntry[0];
+            }
+
             return level;
         }
 
@@ -97,6 +132,18 @@ namespace TurtlePath.Level
             }
         }
 
+        private static CellType ParseObstacleType(string type)
+        {
+            switch (type.ToLower())
+            {
+                case "rock": return CellType.Rock;
+                case "hole": return CellType.Hole;
+                default:
+                    Debug.LogWarning($"Unknown obstacle type: {type}");
+                    return CellType.Rock;
+            }
+        }
+
         public static void RandomizeTileRotations(LevelData level)
         {
             for (int i = 0; i < level.tiles.Length; i++)
@@ -118,6 +165,8 @@ namespace TurtlePath.Level
             public JsonVec2 sea;
             public JsonTileEntry[] tiles;
             public JsonCollectibleEntry[] collectibles;
+            public JsonObstacleEntry[] obstacles;
+            public JsonInventoryEntry[] inventory;
         }
 
         [Serializable]
@@ -148,6 +197,19 @@ namespace TurtlePath.Level
         {
             public string type;
             public JsonVec2 position;
+        }
+
+        [Serializable]
+        private class JsonObstacleEntry
+        {
+            public string type;
+            public JsonVec2 position;
+        }
+
+        [Serializable]
+        private class JsonInventoryEntry
+        {
+            public string type;
         }
     }
 }

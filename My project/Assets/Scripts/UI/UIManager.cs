@@ -9,6 +9,7 @@ namespace TurtlePath.UI
         public GameObject gameplayPanel;
         public GameObject resultPanel;
         public GameObject creditsPanel;
+        public GameObject pausePanel;
 
         private GameObject[] allPanels;
 
@@ -16,7 +17,7 @@ namespace TurtlePath.UI
         {
             allPanels = new GameObject[]
             {
-                mainMenuPanel, levelSelectPanel, gameplayPanel, resultPanel, creditsPanel
+                mainMenuPanel, levelSelectPanel, gameplayPanel, resultPanel, creditsPanel, pausePanel
             };
         }
 
@@ -26,6 +27,12 @@ namespace TurtlePath.UI
             GameObject panel = GetPanel(name);
             if (panel != null)
                 panel.SetActive(true);
+        }
+
+        public bool IsPanelActive(string name)
+        {
+            GameObject panel = GetPanel(name);
+            return panel != null && panel.activeSelf;
         }
 
         public void HideAll()
@@ -47,6 +54,7 @@ namespace TurtlePath.UI
                 case "Gameplay": return gameplayPanel;
                 case "Result": return resultPanel;
                 case "Credits": return creditsPanel;
+                case "Pause": return pausePanel;
                 default:
                     Debug.LogWarning($"Unknown panel: {name}");
                     return null;

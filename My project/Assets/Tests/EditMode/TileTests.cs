@@ -113,5 +113,45 @@ namespace TurtlePath.Tests
             Assert.IsFalse(tile.HasPort(Direction.East));
             Assert.IsFalse(tile.HasPort(Direction.West));
         }
+
+        [Test]
+        public void T_Rot0_HasPorts_NorthEastSouth()
+        {
+            var tile = new Tile(TileType.T, 0);
+            var ports = tile.GetPorts();
+
+            CollectionAssert.AreEquivalent(
+                new[] { Direction.North, Direction.East, Direction.South }, ports);
+        }
+
+        [Test]
+        public void T_Rot90_HasPorts_EastSouthWest()
+        {
+            var tile = new Tile(TileType.T, 90);
+            var ports = tile.GetPorts();
+
+            CollectionAssert.AreEquivalent(
+                new[] { Direction.East, Direction.South, Direction.West }, ports);
+        }
+
+        [Test]
+        public void T_Rot180_HasPorts_SouthWestNorth()
+        {
+            var tile = new Tile(TileType.T, 180);
+            var ports = tile.GetPorts();
+
+            CollectionAssert.AreEquivalent(
+                new[] { Direction.South, Direction.West, Direction.North }, ports);
+        }
+
+        [Test]
+        public void T_Rot270_HasPorts_WestNorthEast()
+        {
+            var tile = new Tile(TileType.T, 270);
+            var ports = tile.GetPorts();
+
+            CollectionAssert.AreEquivalent(
+                new[] { Direction.West, Direction.North, Direction.East }, ports);
+        }
     }
 }
